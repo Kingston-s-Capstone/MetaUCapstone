@@ -57,7 +57,7 @@ const Signin = () => {
                     <button className="signInButton" type="submit" disabled={loading}>Sign In</button>
                     {error && <p>{error}</p>}
                 </div>
-                <div classname="googleOAuth">
+                <div className="googleOAuth">
                     <button type="button" className="googleSignInButton" onClick={handleSignInWithGoogle}> Continue with Google </button>
                 </div>
             </form>
