@@ -1,7 +1,7 @@
 const express = require("express")
 const router = express.Router()
-import supabase from "../supabaseClient"
-import { requireAuth } from "../middleware/requireAuth";
+const supabase = require('../supabaseClient');
+const { requireAuth } = require("../middleware/requireAuth");
 
 // Get profile of authenticated user
 router.get('/me', requireAuth, async (req, res) => {
@@ -9,7 +9,7 @@ router.get('/me', requireAuth, async (req, res) => {
     const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq('id', id)
+        .eq('id', userId)
         .single();
 
     if (error) res.status(400).json({ error });
@@ -33,6 +33,6 @@ router.put('/me', requireAuth,  async (req, res) => {
     }
 )
 
-module.exports = router 
+module.exports = router;
 
 
