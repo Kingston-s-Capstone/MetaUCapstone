@@ -7,7 +7,7 @@ const API = axios.created({
 
 //Profiles
 export const getProfile = () => API.get('/profiles/me');
-export const updateProfile = () => API.put('/profiles/me', data)
+export const updateProfile = ( updates) => API.put('/profiles/me', updates)
 
 //Internships
 export const getInternships = () => API.get('/internships');
