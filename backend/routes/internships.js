@@ -88,8 +88,6 @@ router.post("/userInput", async(req, res) => {
     try {
         const job = req.body
 
-        console.log("Job:", job)
-
         if (!job.title || !job.organization || !job.url) {
             return res.status(400).json({ error: "Missing required fields" })
         }
