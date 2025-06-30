@@ -34,7 +34,7 @@ const internshipsExists = async (url) => {
 }
 
 // Insert internships from RapidAPI into database
-router.post("/populate", async (req, res) => {
+router.post("/apiPopulate", async (req, res) => {
     try {
         let inserted = 0;
 
@@ -45,12 +45,9 @@ router.post("/populate", async (req, res) => {
                     "x-rapidapi-key": RAPIDAPI_KEY,
                 },
             });
-            console.log("Raw API response:", response.data);
             const internships = response.data || response.data.data || [];
-            console.log("Fetched jobs:", internships);
 
             for (const job of internships) {
-                console.log("Checking job URL:", job.url)
                 if (!job?.url) continue;
 
                 const alreadyExists = await internshipsExists(job.url);
@@ -82,6 +79,53 @@ router.post("/populate", async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Failed to fetch internships "});
+    }
+});
+
+
+//User input
+router.post("/userInput", async(req, res) => {
+    try {
+        const job = req.body
+
+        console.log("Job:", job)
+
+        if (!job.title || !job.organization || !job.url) {
+            return res.status(400).json({ error: "Missing required fields" })
+        }
+
+        const { data: existing, error: lookupErrr } = await supabase
+            .from("internships")
+            .select("id")
+            .eq("url", job.url)
+            .maybeSingle();
+
+        if (existing) {
+            return res.status(409).json({ message: "Internship already exists" })
+        }
+
+        const { error } = await supabase.from("internships").insert({
+            title: job.title,
+            organization: job.organization,
+            url: job.url,
+            organization_logo: job.organization_logo || null,
+            date_posted: job.date_posted || null,
+            date_created: job.date_created || null,
+            locations_derived: job.locations_derived || null,
+            employment_type: job.employment_type || null,
+            salary_raw: job.salary_raw || null,
+            source: job.source || "user input",
+            description: job.description_text || null,
+        });
+
+        if (error) {
+            console.error("Insert error:", error);
+            return res.status(500). json({ error: "Insert failed" })
+        }
+
+        res.status(201).json({ message: "Internship added to database" });
+    } catch (err) {
+        res.status(500).json({ error: "Server error" })
     }
 });
 
