@@ -43,7 +43,7 @@ export const AuthContextProvider = ({ children }) => {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${window.location.origin}/dashboard`
+                redirectTo: `${window.location.origin}/profilepage`
             },
         });
         if (error) {
