@@ -8,13 +8,19 @@ import ProfilePage from './pages/ProfilePage';
 import Navigation from './components/Navigation';
 
 export const router = createBrowserRouter([
-    {  
-        path: "/", element: <Navigation />,
-        children: [
-            { path: "/dashboard", element: <PrivateRoute><Dashboard /></PrivateRoute>},
-            { path: "/profilepage", element: <PrivateRoute><ProfilePage /></PrivateRoute>}
-        ],
-    },
+    {  path: "/", element: <Signup /> },
     { path: "/signup", element: <Signup />},
     { path: "/signin", element: <Signin />},
+    { path: "/dashboard", element: ( <PrivateRoute><Navigation /></PrivateRoute>
+        ),
+        children: [
+            { path: "/dashboard", element: <Dashboard /> }
+        ]
+    },
+    { path: "/profilepage", element: ( <PrivateRoute><Navigation /></PrivateRoute>
+        ),
+        children: [
+            { path: "/profilepage", element: <ProfilePage /> }
+        ]
+    },
 ])
