@@ -33,3 +33,13 @@
     padding: 2rem;
     margin-right: 200px;
 }
+
+.signOut {
+    cursor: pointer;
+    color: navy;
+    font-weight: bold;
+}
+
+.signOut:hover {
+    text-decoration: underline;
+}
