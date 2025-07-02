@@ -7,6 +7,27 @@ const AuthContext = createContext();
 export const AuthContextProvider = ({ children }) => {
     const [session, setSession] = useState(undefined)
 
+    //Insert user profile if it doesn't exist
+    const insertProfile = async (user) => {
+        if (!user) return;
+
+        const { data: existing, error: fetchError } = await supabase
+            .from("profiles")
+            .select("user_id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+        if (!existing) {
+            const { error: insertError } = await supabase
+                .from("profiles")
+                .insert([{ user_id: user.id, email: user.email }])
+
+            if (insertError) {
+                console.error("Error inserting profile:", insertError)
+            }
+        }
+    }
+
     //Sign up
     const signUpNewUser = async ( email, password ) => {
         const { data, error } = await supabase.auth.signUp({
@@ -17,6 +38,10 @@ export const AuthContextProvider = ({ children }) => {
             console.error("There was a problem signing up:", error);
             return { success: false, error}
         }
+
+        const { data: userData } = await supabase.auth.getUser();
+        await insertProfile(userData);
+
         return { success: true, data }
     }
 
@@ -56,10 +81,18 @@ export const AuthContextProvider = ({ children }) => {
     useEffect(() => {
         supabase.auth.getSession().then(({data: { session } }) => {
             setSession(session)
+
+            if (session?.user) {
+                insertProfile(session.user)
+            }
         });
 
         supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session)
+
+            if (session?.user) {
+                insertProfile(session.user)
+            }
         })
     }, []);
 
