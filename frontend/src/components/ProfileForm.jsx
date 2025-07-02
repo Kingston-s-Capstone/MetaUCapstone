@@ -81,11 +81,23 @@ const ProfileForm = () => {
                 type="text"
                 name="name"
                 placeholder= "Name"
-                value={formData.message}
+                value={formData.name}
                 onChange={handleChange}
                 required
             />
             
+            <label>
+                Institution:
+            </label>
+            <input 
+                type="text"
+                name="school"
+                placeholder= "College or University"
+                value={formData.school}
+                onChange={handleChange}
+                required
+            />
+
         <label>
             Major:
         </label>
