@@ -1,6 +1,6 @@
 const express = require("express")
 const router = express.Router()
-const supabase = require('../supabaseClient');
+const { supabase } = require('../supabaseClient');
 const { requireAuth } = require("../middleware/requireAuth");
 
 // Get profile of authenticated user
@@ -24,7 +24,7 @@ router.put('/me', requireAuth,  async (req, res) => {
     const { data, error } =  await supabase
         .from('profiles')
         .update(updates)
-        .eq('id', userId)
+        .eq('user_id', userId)
         .select()
         .single();
 
