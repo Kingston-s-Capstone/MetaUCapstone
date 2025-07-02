@@ -15,7 +15,7 @@ const ProfileForm = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setForm((prev) => ({
+        setFormData((prev) => ({
             ...prev,
             [name]: value
         }));
@@ -90,6 +90,7 @@ const ProfileForm = () => {
             Major:
         </label>
             <select name="major" value={formData.major} onChange={handleChange} required>
+                <option value="" disabled>Select your major</option>
                 <optgroup label="Business">
                     <option>Accounting</option>
                     <option>Business Administration</option>

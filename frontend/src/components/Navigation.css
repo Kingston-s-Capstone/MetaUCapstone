@@ -1,0 +1,35 @@
+.navbar {
+    background: lightgray;
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    padding-top: 50px;
+    padding-right: 1rem;
+    width: 150px;
+    border-radius: 10px;
+}
+
+.navbarList {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+    flex-direction: column;
+    padding: 2rem;
+    align-items: center;
+}
+
+.navbarList li a {
+    color: navy;
+    text-decoration: none;
+}
+
+.navbarList li a:hover {
+    text-decoration: underline;
+}
+
+.content {
+    flex: 1;
+    padding: 2rem;
+    margin-right: 200px;
+}
