@@ -1,6 +1,6 @@
 import React from "react";
 import ProfileForm from "../components/ProfileForm";
-import "../components/ProfilePage.css"
+import "../pages/ProfilePage.css"
 import UpliftEDLogo from "../assets/UpliftED_logo.png"
 
 const ProfilePage = () => {

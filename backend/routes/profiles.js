@@ -9,11 +9,11 @@ router.get('/me', requireAuth, async (req, res) => {
     const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq('id', userId)
+        .eq('user_id', userId)
         .single();
 
-    if (error) res.status(400).json({ error });
-    res.json(data)
+    if (error) return res.status(400).json({ error });
+    return res.json(data)
 })
 
 //Update prifile of authenticated user
