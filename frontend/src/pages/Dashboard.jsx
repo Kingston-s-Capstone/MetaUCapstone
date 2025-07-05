@@ -13,7 +13,6 @@ const Dashboard = () => {
         const fetchProfile = async () => {
             try {
                 const response = await getProfile();
-                console.log(response)
                 setUserName(response.data.name)
             } catch (err) {
                 console.error('Failed to fetch profile', err)
