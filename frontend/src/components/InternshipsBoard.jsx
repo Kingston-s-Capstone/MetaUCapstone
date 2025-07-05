@@ -43,8 +43,8 @@ const InternshipBoard = () => {
                 const { data: primaryResults, error: primaryError } = await supabase
                     .from("internships")
                     .select("*")
-                    .ilike("title", `%${firstKeyword}`)
-                    .limit(5);
+                    .ilike("title", `%${firstKeyword}%`)
+                    .limit(3);
 
                 if (primaryError) throw primaryError;
 
@@ -57,7 +57,7 @@ const InternshipBoard = () => {
                     .from("internships")
                     .select("*")
                     .or(filter)
-                    .limit(5);
+                    .limit(2);
 
                 if (secondaryError) throw secondaryError;
 
