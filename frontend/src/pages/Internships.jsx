@@ -77,7 +77,9 @@ const Internships = () => {
                 </div>
 
                 {!loading && (
-                    <button onClick={() => fetchInternships()} className="loadMore">Load More</button>
+                    <div className="loadMoreContainer">
+                        <button onClick={() => fetchInternships()} className="loadMore">Load More</button>
+                    </div>
                 )}
             </main>
         </div>
