@@ -42,8 +42,8 @@ const Internships = () => {
     }, [sortBy])
 
     return (
-        <div className="content">
-            <header className="header">
+        <div className="page">
+            <header className="pageHeader">
                 <h2>Internships</h2>
             </header>
             <main className="main">
@@ -67,9 +67,9 @@ const Internships = () => {
                         <button className="addButton">Add New</button>
                     </div>
                 </div>
-                <div className="internships">
+                <div className="internshipList">
                     {internships.map((intern) => (
-                        <div key={intern.id} className="card">
+                        <div key={intern.id} className="internship">
                             <a href={intern.url} target="_blank" rel="noreffer">{intern.title}</a>
                             <span>{intern.organization}</span>
                         </div>

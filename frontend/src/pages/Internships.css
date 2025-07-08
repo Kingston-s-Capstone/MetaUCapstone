@@ -7,7 +7,7 @@
     --color-hover-bg: #f5f5f5;
 }
 
-.content {
+.page {
     padding: 24px;
     background-color: var(--color-bg);
     height: 100%;
@@ -17,7 +17,7 @@
     margin-right: 150px;
 }
 
-.header {
+.pageHeader {
     font-size: 24px;
     font-weight: 700;
     margin: 0;
@@ -68,14 +68,14 @@
     background-color: #b8831f;
 }
 
-.internships {
+.internshipList {
     display: flex;
     flex-direction: column;
     gap: 16px;
     width: 100%;
 }
 
-.card {
+.internship {
     width: 100%;
     background-color: var(--color-card-bg);
     padding: 16px 20px;
@@ -88,24 +88,24 @@
     border-left: 6px solid var(--color-primary);
 }
 
-.card:hover {
+.internship:hover {
     background-color: var(--color-hover-bg);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-.card a {
+.internship a {
     font-size: 16px;
     font-weight: 700;
     color: var(--color-primary);
     text-decoration: none;
 }
 
-.card a:hover {
+.internship a:hover {
     text-decoration: underline;
 }
 
-.card .org {
+.internship .org {
     font-size: 14px;
     color: #555;
 }
