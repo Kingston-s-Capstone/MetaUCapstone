@@ -1,4 +1,5 @@
 import SearchForm from "../components/SearchForm"
+import "./Internships.css"
 import { supabase } from "../SupaBaseClient"
 import { useState, useEffect } from "react"
 
@@ -8,7 +9,7 @@ const Internships = () => {
     const [loading, setLoading] = useState(false)
     const [sortBy, setSortBy] = useState("")
 
-    
+    //Fetch internships 15 at a time for a page
     const fetchInternships = async (reset = false) => {
         setLoading(true);
         const pageSize = 15;
@@ -39,6 +40,7 @@ const Internships = () => {
     useEffect(() => {
         fetchInternships(true)
     }, [sortBy])
+
     return (
         <div className="content">
             <header className="header">
@@ -59,7 +61,7 @@ const Internships = () => {
                     </div>
                     <div className="search">
                         <SearchForm />
-                        <button onClick={resetPage} className="resetButton">Clear</button>
+                        <button className="resetButton">Clear</button>
                     </div>
                     <div className="addNew">
                         <button className="addButton">Add New</button>
@@ -81,3 +83,5 @@ const Internships = () => {
         </div>
     )
 }
+
+export default Internships

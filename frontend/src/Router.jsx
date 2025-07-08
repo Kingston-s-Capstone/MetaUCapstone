@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import PrivateRoute from './components/PrivateRoute';
 import ProfilePage from './pages/ProfilePage';
 import Navigation from './components/Navigation';
+import Internships from './pages/Internships';
 
 export const router = createBrowserRouter([
     {  path: "/", element: <Signup /> },
@@ -20,6 +21,12 @@ export const router = createBrowserRouter([
         ),
         children: [
             { path: "/profilepage", element: <ProfilePage /> }
+        ]
+    },
+    { path: "/internshippage", element: ( <PrivateRoute><Navigation /></PrivateRoute>
+        ),
+        children: [
+            { path: "/internshippage", element: <Internships /> }
         ]
     },
 ])
