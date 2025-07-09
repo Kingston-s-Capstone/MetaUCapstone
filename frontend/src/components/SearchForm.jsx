@@ -1,34 +1,36 @@
 import { useState } from "react";
 
 
-function SearchForm({ onSearch }) {
+function SearchForm({ onSearch, onClear }) {
 
-    let [input, setInput] = useState("")
+    const [input, setInput] = useState("")
 
     const handleSubmit = (event) => {
         event.preventDefault();
         const trimmedInput = input.trim();
         if (trimmedInput !== "") {
             onSearch(trimmedInput);
-            setInput("");
         }
     }
 
-    const FormSubmit=(event)=> {
+    const formSubmit=(event)=> {
         if (event.keyCode === 13) {
-            console.log("enter")
+            event.preventDefault();
+            handleSubmit(event)
         }
     }
 
     const handleClear = (event) => {
-        setInput("")
+        setInput("");
+        onClear();
     }
 
     return (
         <div className="SearchForm">
             <form onSubmit={handleSubmit}>
-                <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Search Movies" onKeyDown={(e) => FormSubmit(e)}></input>
-                <button type="submit">Submit</button>
+                <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Search Internships" onKeyDown={(e) => formSubmit(e)}></input>
+                <button type="submit" className="formSubmit">Submit</button>
+                <button className="reset" type="button" onClick={handleClear}>Clear</button>
             </form>
         </div>
     )

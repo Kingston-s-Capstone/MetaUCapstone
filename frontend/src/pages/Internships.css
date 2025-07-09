@@ -26,15 +26,28 @@
 
 .searchContainer {
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1200px;
     align-items: center;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
+    margin: 1rem auto;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.search {
+    display: flex;
+    align-items: center;
+}
+
+.searchAdd {
+    display: flex;
+    gap: 10px;
 }
 
 .filters select,
 .search input,
+.search button,
 .resetButton,
 .addButton {
     font-size: 14px;
@@ -51,7 +64,8 @@
     outline: none;
 }
 
-.resetButtons {
+.reset,
+.formSubmit {
     background-color: #e0e0e0;
     cursor: pointer;
 }
