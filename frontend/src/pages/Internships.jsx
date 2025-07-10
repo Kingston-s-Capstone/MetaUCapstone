@@ -2,6 +2,7 @@ import SearchForm from "../components/SearchForm"
 import "./Internships.css"
 import { supabase } from "../SupaBaseClient"
 import { useState, useEffect } from "react"
+import { getRecommendations } from "../utilities/data"
 
 const Internships = () => {
     const [internships, setInternships] = useState([])
@@ -10,6 +11,18 @@ const Internships = () => {
     const [sortBy, setSortBy] = useState("")
     const [searchQuery, setSearchQuery] = useState("")
     const [hasMore, setHasMore] = useState(true)
+
+    useEffect(() => {
+        const fetchRecommendations = async () => {
+            try {
+                const data = await getRecommendations("32df310e-b39a-48c8-8431-68df22bb0332")
+                console.log("Recommendations:", data);
+            }   catch (error) {
+                console.error("Error fetching recommendations:", error)
+            }
+        }
+        fetchRecommendations()
+    }, [])
 
     //Fetch internships 15 at a time for a page
     const fetchInternships = async (reset = false, customSearch = searchQuery) => {

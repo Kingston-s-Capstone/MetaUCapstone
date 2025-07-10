@@ -29,4 +29,11 @@ export const addInternship = () => async (internshipData) => {
     return res;
 }
 
+//Recommendations
+export const getRecommendations = async (user_id) => {
+    const res = await API.get(`/recommendations/${user_id}`)
+    return res.data;
+}
+
+
 export default API

@@ -2,6 +2,7 @@ const express = require("express")
 const cors = require('cors');
 const profileRoutes = require('./routes/profiles');
 const internshipsRoutes = require('./routes/internships');
+const recommendationRoutes = require('./routes/recommendation')
 
 const app = express()
 const PORT = 4000
@@ -11,6 +12,7 @@ app.use(cors())
 
 app.use("/api/profiles", profileRoutes)
 app.use("/api/internships", internshipsRoutes)
+app.use('/api/recommendations', recommendationRoutes);
 
 
 app.get('/', (req, res)=> {
