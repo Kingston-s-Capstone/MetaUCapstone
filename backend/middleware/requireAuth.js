@@ -1,11 +1,11 @@
-import { createClient } from "@supabase/supabase-js"
+const { createClient } = require("@supabase/supabase-js")
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-export const requireAuth = async (req, res, next) => {
+const requireAuth = async (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
 
     if (!token) return res.status(401).json({ error: 'Missing token' });
@@ -19,3 +19,5 @@ export const requireAuth = async (req, res, next) => {
     req.user = data.user;
     next();
 };
+
+module.exports = requireAuth;
