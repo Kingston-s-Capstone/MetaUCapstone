@@ -44,8 +44,9 @@ const ProfileForm = () => {
     ];
 
     const careerInterests = [
-        "Software Engineering",
+        "Software Engineer",
         "Data Science & Analytics",
+        "AI & Machine Learning",
         "Cybersecurity",
         "Product & Project Management",
         "Electrical & Computer Engineering",

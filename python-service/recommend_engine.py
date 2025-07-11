@@ -117,17 +117,28 @@ def get_recommendations(user_id):
     scholarship_scores_list = cosine_similarity(user_scholarship_vector, scholarship_vectors).flatten()
 
     #key word match bonus
-    def apply_keyword_bonus(scores, docs):
+    def apply_keyword_bonus(scores, docs, user, type):
         bonus_list = []
-        keywords = set(internship_profile.lower().split() + scholarship_profile.lower().split())
-        for doc in docs:
+        if type == "internships":
+            keywords = set(
+                (user.get("major","") + " " + user.get("career_interests", "")).lower().split()
+            )
+        elif type == "scholarships":
+            keywords = set(
+                (user.get("major", "") + " " + user.get("classification", "")).lower().split()
+            )
+        else:
+            keywords = set()
+
+        for i, doc in enumerate(docs):
             doc_words = set(doc.lower().split())
             matches = keywords & doc_words
-            bonus_list.append(len(matches) * 0.05)
+            bonus = (len(matches) * 0.05)
+            bonus_list.append(bonus)
         return [s + b for s, b in zip(scores, bonus_list)]
     
-    internship_scores = apply_keyword_bonus(internship_scores_list, internship_docs)
-    scholarship_scores = apply_keyword_bonus(scholarship_scores_list, scholarship_docs)
+    internship_scores = apply_keyword_bonus(internship_scores_list, internship_docs, user, "internships")
+    scholarship_scores = apply_keyword_bonus(scholarship_scores_list, scholarship_docs, user, "scholarships")
 
     top_internships = sorted(
         zip(internship_meta, internship_scores), key=lambda x: x[1], reverse=True
