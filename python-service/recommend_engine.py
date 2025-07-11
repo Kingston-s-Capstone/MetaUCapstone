@@ -4,6 +4,7 @@ import psycopg2
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from builtins import zip
+from nltk.corpus import wordnet as wn
 
 load_dotenv()
 
@@ -54,6 +55,14 @@ def get_all_opportunities():
 
     return internships, scholarships
 
+# expand a word with its synonyms from WordNet
+def get_synonyms(word):
+    synonyms = set()
+    for syn in wn.synsets(word):
+        for lemma in syn.lemmas():
+            synonyms.add(lemma.name().lower().replace('_', ' '))
+    return synonyms
+
 # Recommendation algorithm
 def get_recommendations(user_id):
     user = get_user_profile(user_id)
@@ -67,7 +76,7 @@ def get_recommendations(user_id):
     internship_profile = " ".join([
         (user["career_interests"] + "") * 3 if user["career_interests"] else "",
         (user["major"] + "") * 2 if user["major"] else "",
-        (user["location_preferences"] + "") * 1 if user["location_preferences"] else "",
+        # (user["location_preferences"] + "") * 1 if user["location_preferences"] else "",
         (user["classification"] + "") * 1 if user["classification"] else ""
     ])
 
@@ -117,18 +126,26 @@ def get_recommendations(user_id):
     scholarship_scores_list = cosine_similarity(user_scholarship_vector, scholarship_vectors).flatten()
 
     #key word match bonus
+    internship = "internship"
+    scholarship = "scholarship"
+
     def apply_keyword_bonus(scores, docs, user, type):
         bonus_list = []
-        if type == "internships":
-            keywords = set(
+        if type == internship:
+            keywords_raw = set(
                 (user.get("major","") + " " + user.get("career_interests", "")).lower().split()
             )
-        elif type == "scholarships":
-            keywords = set(
+        elif type == scholarship:
+            keywords_raw = set(
                 (user.get("major", "") + " " + user.get("classification", "")).lower().split()
             )
         else:
-            keywords = set()
+            keywords_raw = set()
+
+        keywords = set()
+        for word in keywords_raw:
+            keywords.add(word)
+            keywords.update(get_synonyms(word))
 
         for i, doc in enumerate(docs):
             doc_words = set(doc.lower().split())
@@ -137,12 +154,12 @@ def get_recommendations(user_id):
             bonus_list.append(bonus)
         return [s + b for s, b in zip(scores, bonus_list)]
     
-    internship_scores = apply_keyword_bonus(internship_scores_list, internship_docs, user, "internships")
-    scholarship_scores = apply_keyword_bonus(scholarship_scores_list, scholarship_docs, user, "scholarships")
+    internship_scores = apply_keyword_bonus(internship_scores_list, internship_docs, user, internship)
+    scholarship_scores = apply_keyword_bonus(scholarship_scores_list, scholarship_docs, user, scholarship)
 
     top_internships = sorted(
         zip(internship_meta, internship_scores), key=lambda x: x[1], reverse=True
-    )[:10]
+    )[:20]
 
     top_scholarships = sorted(
         zip(scholarship_meta, scholarship_scores), key=lambda x: x[1], reverse=True
