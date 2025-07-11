@@ -5,6 +5,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from builtins import zip
 from nltk.corpus import wordnet as wn
+import re
+from nltk.corpus import stopwords
 
 load_dotenv()
 
@@ -62,6 +64,13 @@ def get_synonyms(word):
         for lemma in syn.lemmas():
             synonyms.add(lemma.name().lower().replace('_', ' '))
     return synonyms
+
+#filter out common words from keywords
+common_stopwords = set(stopwords.words('english')) | {"&", "/"}
+
+def clean_keywords(text):
+    words = re.findall(r'\b[a-z]+\b', text.lower())
+    return [word for word in words if word not in common_stopwords]
 
 # Recommendation algorithm
 def get_recommendations(user_id):
@@ -135,15 +144,17 @@ def get_recommendations(user_id):
             keywords_raw = set(
                 (user.get("major","") + " " + user.get("career_interests", "")).lower().split()
             )
+            cleaned_keywords = set(clean_keywords(" ".join(keywords_raw)))
         elif type == scholarship:
             keywords_raw = set(
                 (user.get("major", "") + " " + user.get("classification", "")).lower().split()
             )
+            cleaned_keywords = set(clean_keywords(" ".join(keywords_raw)))
         else:
             keywords_raw = set()
 
         keywords = set()
-        for word in keywords_raw:
+        for word in cleaned_keywords:
             keywords.add(word)
             keywords.update(get_synonyms(word))
 
