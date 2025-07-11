@@ -9,7 +9,7 @@ CORS(app)
 def home():
     return jsonify({"message": "Flask is running"})
 
-@app.route('/recommendations/<user_id>')
+@app.route('/recommendations/<user_id>', methods=['GET'])
 def recommendations(user_id):
     results = get_recommendations(user_id)
     return jsonify(results)
