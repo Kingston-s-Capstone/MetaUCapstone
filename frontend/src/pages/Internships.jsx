@@ -13,6 +13,8 @@ const Internships = () => {
     const [hasMore, setHasMore] = useState(true)
     const [recommendedIds, setRecommendedIds] = useState([])
 
+    const pageSize = 15
+
     //fetch recommended internships
     useEffect(() => {
         const fetchRecommendations = async () => {
@@ -43,10 +45,9 @@ const Internships = () => {
                     .filter((item) => item.type === "internships")
                     .map((item) => item.id);
 
-                const pageSize = 15;
                 const pagedIds = internshipIDs.slice(0, pageSize)
                 setPage(1);
-                setHasMore(internshipIDs.length > pageSize);
+                setHasMore(internshipIDs.length >= pageSize);
                 
                 //Fetch internship data from supabase
                 const { data, error } = await supabase
@@ -112,6 +113,39 @@ const Internships = () => {
         setLoading(false);
     };
     
+    //Load more logic
+    const handleLoadMore = async () => {
+        try {
+            setLoading(true);
+            if (sortBy === "recommended") {
+                const nextPage = page + 1;
+                const nextIds = recommendedIds.slice(
+                    page * pageSize,
+                    nextPage * pageSize
+                );
+                if (nextIds.length === 0) {
+                    setHasMore(false);
+                    return
+                }
+                const moreData = await fetchInternships({ ids: nextIds })
+                setInternships((prev) => [...prev, ...moreData]);
+                setPage(nextPage);
+                if (recommendedIds.length <= nextPage * pageSize) {
+                    setHasMore(false)
+                }
+            } else {
+                const data = await fetchInternships({ page, sortBy });
+                if (data.length < pageSize) setHasMore(false);
+                setInternships((prev) => [...prev, ...data]);
+                setPage(page + 1)
+            }
+        } catch (error) {
+            console.error("Error loading more internships", error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
     useEffect(() => {
         fetchInternships(true)
     }, [sortBy, searchQuery])
@@ -164,7 +198,7 @@ const Internships = () => {
 
                 {!loading && hasMore && internships.length > 0 && (
                     <div className="loadMoreContainer">
-                        <button onClick={() => fetchInternships()} className="loadMore">Load More</button>
+                        <button onClick={() => handleLoadMore} className="loadMore">Load More</button>
                     </div>
                 )}
             </main>
