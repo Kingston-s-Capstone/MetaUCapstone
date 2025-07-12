@@ -16,63 +16,73 @@ const Internships = () => {
     const pageSize = 15
 
     //fetch recommended internships
-    useEffect(() => {
-        const fetchRecommendations = async () => {
-            try {
-                setLoading(true)
-                const { data: { user }, error: useError } = await supabase.auth.getUser();
-                if(useError) console.error("User fetch error:", useError)
-                if (!user) return;
 
-                //Get user profile
-                const { data: profile, error: profileError } = await supabase
-                    .from("profiles")
-                    .select("user_id")
-                    .eq("user_id", user.id)
-                    .single();
+    const fetchRecommendations = async (reset = false, customSearch = searchQuery) => {
+        try {
+            setLoading(true)
 
-                if (profileError) {
-                    console.error("Profile fetch error:", profileError)
-                    return;
-                }
+            const currentPage = reset ? 0 : page;
+            const from = currentPage * pageSize;
+            const to = from + pageSize;
 
-                //Get recommendations
-                const userProfile = profile.user_id
+            const { data: { user }, error: useError } = await supabase.auth.getUser();
+            if(useError) console.error("User fetch error:", useError)
+            if (!user) return;
 
-                const recs = await getRecommendations(userProfile)
+            //Get user profile
+            const { data: profile, error: profileError } = await supabase
+                .from("profiles")
+                .select("user_id")
+                .eq("user_id", user.id)
+                .single();
 
-                const internshipIDs = recs
-                    .filter((item) => item.type === "internships")
-                    .map((item) => item.id);
-
-                const pagedIds = internshipIDs.slice(0, pageSize)
-                setPage(1);
-                setHasMore(internshipIDs.length >= pageSize);
-                
-                //Fetch internship data from supabase
-                const { data, error } = await supabase
-                    .from("internships")
-                    .select("*")
-                    .in("id", pagedIds)
-
-                if (error) {
-                    console.error("Error fetching internship details:", error)
-                } else {
-                    const sortedData = pagedIds.map(
-                        (id) => data.find((intern) => intern.id === id)
-                    );
-
-                    setInternships(sortedData);
-                    setRecommendedIds(internshipIDs)
-                }
-            }   catch (error) {
-                console.error("Error fetching recommendations:", error)
-            } finally {
-                setLoading(false)
+            if (profileError) {
+                console.error("Profile fetch error:", profileError)
+                return;
             }
+
+            //Get recommendations
+            const userProfile = profile.user_id
+
+            const recs = await getRecommendations(userProfile)
+            console.log(recs)
+
+            const internshipIDs = recs.internship_ids || []
+            console.log(internshipIDs)
+
+            if (reset) {
+                setRecommendedIds(internshipIDs)
+            }
+
+            const pagedIds = internshipIDs.slice(from, to);
+                
+            //Fetch internship data from supabase
+            const { data, error } = await supabase
+                .from("internships")
+                .select("*")
+                .in("id", pagedIds)
+
+            // Apply search if present
+            if (customSearch.trim()) {
+                data = data.ilike("title", `%${customSearch.toLowerCase()}%`)
+            }
+
+            if (error) {
+                console.error("Error fetching internship details:", error)
+                return;
+            } else {
+                const sortedData = pagedIds.map((id) => data.find((intern) => intern.id === id))
+                setInternships(prev => (reset ? sortedData : [...prev, ...sortedData]));
+            }
+            setPage(prev => (reset ? 1 : prev + 1));
+            setHasMore(internshipIDs.length > to)
+        }   catch (error) {
+            console.error("Error fetching recommendations:", error)
+        } finally {
+            setLoading(false)
         }
-        fetchRecommendations()
-    }, [])
+    }
+
 
     //Fetch internships 15 at a time for a page
     const fetchInternships = async (reset = false, customSearch = searchQuery, customRecommendedIds = recommendedIds) => {
@@ -101,11 +111,13 @@ const Internships = () => {
 
             if (error) {
                 console.error("Fetch error:", error)
-            } else {
-                setInternships(reset ? data : [...internships, ...data]);
-                if (!reset) setPage((prev) => prev + 1);
-                setHasMore(data.length === pageSize);
-            }
+                return
+            } 
+
+            setInternships(prev => (reset ? data : [...prev, ...data]));
+            setPage(prev => (reset ? 1 : prev + 1))
+            setHasMore(data.length === pageSize)
+            
         } catch (err) {
             console.error("Unexpected error:", err.messege)
         };
@@ -114,40 +126,20 @@ const Internships = () => {
     };
     
     //Load more logic
-    const handleLoadMore = async () => {
-        try {
-            setLoading(true);
-            if (sortBy === "recommended") {
-                const nextPage = page + 1;
-                const nextIds = recommendedIds.slice(
-                    page * pageSize,
-                    nextPage * pageSize
-                );
-                if (nextIds.length === 0) {
-                    setHasMore(false);
-                    return
-                }
-                const moreData = await fetchInternships({ ids: nextIds })
-                setInternships((prev) => [...prev, ...moreData]);
-                setPage(nextPage);
-                if (recommendedIds.length <= nextPage * pageSize) {
-                    setHasMore(false)
-                }
-            } else {
-                const data = await fetchInternships({ page, sortBy });
-                if (data.length < pageSize) setHasMore(false);
-                setInternships((prev) => [...prev, ...data]);
-                setPage(page + 1)
-            }
-        } catch (error) {
-            console.error("Error loading more internships", error);
-        } finally {
-            setLoading(false);
+    const handleLoadMore = () => {
+        if (sortBy === "recommended") {
+            fetchRecommendations()
+        } else {
+            fetchInternships()
         }
     }
 
     useEffect(() => {
+        if (sortBy == "recommended") {
+            fetchRecommendations(true)
+        } else {
         fetchInternships(true)
+        }
     }, [sortBy, searchQuery])
 
     return (
@@ -163,7 +155,7 @@ const Internships = () => {
                             setPage(1);
                             fetchInternships(true)
                         }} >
-                            <option value="">Recommended</option>
+                            <option value="recommended">Recommended</option>
                             <option value="newest">Newly Added</option>
                             <option value="all">All Internships</option>
                         </select>
@@ -177,7 +169,11 @@ const Internships = () => {
                                 }}
                                 onClear={() => {
                                     setSearchQuery("");
-                                    fetchInternships(true, "")
+                                    if (sortBy === "recommended") {
+                                        fetchRecommendations(true, "")
+                                    } else {
+                                        fetchInternships(true, "")
+                                    }
                                 }}
                             />
                         </div>
@@ -198,7 +194,7 @@ const Internships = () => {
 
                 {!loading && hasMore && internships.length > 0 && (
                     <div className="loadMoreContainer">
-                        <button onClick={() => handleLoadMore} className="loadMore">Load More</button>
+                        <button onClick={handleLoadMore} className="loadMore">Load More</button>
                     </div>
                 )}
             </main>
