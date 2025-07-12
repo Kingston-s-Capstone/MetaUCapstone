@@ -85,7 +85,6 @@ def get_recommendations(user_id):
     internship_profile = " ".join([
         (user["career_interests"] + "") * 3 if user["career_interests"] else "",
         (user["major"] + "") * 2 if user["major"] else "",
-        # (user["location_preferences"] + "") * 1 if user["location_preferences"] else "",
         (user["classification"] + "") * 1 if user["classification"] else ""
     ])
 
