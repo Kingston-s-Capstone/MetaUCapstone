@@ -8,24 +8,73 @@ const Internships = () => {
     const [internships, setInternships] = useState([])
     const [page, setPage] = useState(1)
     const [loading, setLoading] = useState(false)
-    const [sortBy, setSortBy] = useState("")
+    const [sortBy, setSortBy] = useState("recommended")
     const [searchQuery, setSearchQuery] = useState("")
     const [hasMore, setHasMore] = useState(true)
+    const [recommendedIds, setRecommendedIds] = useState([])
 
+    //fetch recommended internships
     useEffect(() => {
         const fetchRecommendations = async () => {
             try {
-                const data = await getRecommendations("32df310e-b39a-48c8-8431-68df22bb0332")
-                console.log("Recommendations:", data);
+                setLoading(true)
+                const { data: { user }, error: useError } = await supabase.auth.getUser();
+                if(useError) console.error("User fetch error:", useError)
+                if (!user) return;
+
+                //Get user profile
+                const { data: profile, error: profileError } = await supabase
+                    .from("profiles")
+                    .select("user_id")
+                    .eq("user_id", user.id)
+                    .single();
+
+                if (profileError) {
+                    console.error("Profile fetch error:", profileError)
+                    return;
+                }
+
+                //Get recommendations
+                const userProfile = profile.user_id
+
+                const recs = await getRecommendations(userProfile)
+
+                const internshipIDs = recs
+                    .filter((item) => item.type === "internships")
+                    .map((item) => item.id);
+
+                const pageSize = 15;
+                const pagedIds = internshipIDs.slice(0, pageSize)
+                setPage(1);
+                setHasMore(internshipIDs.length > pageSize);
+                
+                //Fetch internship data from supabase
+                const { data, error } = await supabase
+                    .from("internships")
+                    .select("*")
+                    .in("id", pagedIds)
+
+                if (error) {
+                    console.error("Error fetching internship details:", error)
+                } else {
+                    const sortedData = pagedIds.map(
+                        (id) => data.find((intern) => intern.id === id)
+                    );
+
+                    setInternships(sortedData);
+                    setRecommendedIds(internshipIDs)
+                }
             }   catch (error) {
                 console.error("Error fetching recommendations:", error)
+            } finally {
+                setLoading(false)
             }
         }
         fetchRecommendations()
     }, [])
 
     //Fetch internships 15 at a time for a page
-    const fetchInternships = async (reset = false, customSearch = searchQuery) => {
+    const fetchInternships = async (reset = false, customSearch = searchQuery, customRecommendedIds = recommendedIds) => {
         setLoading(true);
         const pageSize = 15;
         const from = reset ? 0 : (page - 1) * pageSize;
