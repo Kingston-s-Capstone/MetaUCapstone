@@ -7,8 +7,13 @@ from builtins import zip
 from nltk.corpus import wordnet as wn
 import re
 from nltk.corpus import stopwords
+from datetime import datetime, timedelta, date
 
 load_dotenv()
+
+#variables
+internship = "internship"
+scholarship = "scholarship"
 
 #connect to db
 def connect_db():
@@ -45,11 +50,11 @@ def get_all_opportunities():
     cur = conn.cursor()
 
     #internships
-    cur.execute("SELECT id, title, locations_derived FROM internships")
+    cur.execute("SELECT id, title, locations_derived, date_validthrough FROM internships")
     internships = cur.fetchall()
 
     #Scholarships
-    cur.execute("SELECT id, description, eligibility, location FROM scholarships")
+    cur.execute("SELECT id, description, eligibility, location, deadline FROM scholarships")
     scholarships = cur.fetchall()
 
     cur.close()
@@ -72,6 +77,46 @@ def clean_keywords(text):
     words = re.findall(r'\b[a-z]+\b', text.lower())
     return [word for word in words if word not in common_stopwords]
 
+#time-based weighting 
+def time_weighting(opportunity, base_score, type):
+    now = datetime.now()
+
+    deadline_raw = None
+    if type == internship:
+        deadline_raw = opportunity.get("data_validthrough")
+    elif type == scholarship:
+        deadline_raw = opportunity.get("deadline")
+
+    if not deadline_raw:
+        return base_score * 1.0
+    
+    try:
+        if isinstance(deadline_raw, datetime):
+            deadline = deadline_raw
+        elif isinstance(deadline_raw, date):
+            deadline = datetime.combine(deadline_raw, datetime.min.time())
+        elif isinstance(deadline_raw, str):
+            deadline = datetime.fromisoformat(deadline_raw)
+        else:
+            return base_score * 1.0
+    except Exception:
+        return base_score * 1.0
+    
+    days_until_deadline = (deadline - now).days
+
+    if days_until_deadline < 0:
+        multiplier = 0.5
+    elif days_until_deadline == 0:
+        multiplier = 1.5
+    elif days_until_deadline <= 7:
+        multiplier = 1.3
+    elif days_until_deadline <= 30:
+        multiplier = 1.1
+    else:
+        multiplier = 1.0
+
+    return base_score * multiplier
+
 # Recommendation algorithm
 def get_recommendations(user_id):
     user = get_user_profile(user_id)
@@ -85,7 +130,7 @@ def get_recommendations(user_id):
     internship_profile = " ".join([
         (user["career_interests"] + "") * 3 if user["career_interests"] else "",
         (user["major"] + "") * 2 if user["major"] else "",
-        (user["classification"] + "") * 1 if user["classification"] else ""
+        (user["classification"] + "") * 1 if user["classification"] else "",
     ])
 
     scholarship_profile = " ".join([
@@ -105,7 +150,12 @@ def get_recommendations(user_id):
             str(opp[2]) if opp[2] else ""
         ])
         internship_docs.append(text)
-        internship_meta.append(opp[0])
+        internship_meta.append({
+            "id": opp[0],
+            "title": opp[1],
+            "locations_derived": opp[2],
+            "date_validthrough": opp[3]
+        })
 
     #process scholarships
     scholarship_docs = []
@@ -118,7 +168,13 @@ def get_recommendations(user_id):
             opp[3] or ""
         ])
         scholarship_docs.append(text)
-        scholarship_meta.append(opp[0])
+        scholarship_meta.append({
+            "id": opp[0],
+            "description": opp[1],
+            "eligibility": opp[2],
+            "location": opp[3],
+            "deadline": opp[4]
+        })
 
     #TF-IDF + cosine similarity
     vectorizer = TfidfVectorizer()
@@ -134,9 +190,6 @@ def get_recommendations(user_id):
     scholarship_scores_list = cosine_similarity(user_scholarship_vector, scholarship_vectors).flatten()
 
     #key word match bonus
-    internship = "internship"
-    scholarship = "scholarship"
-
     def apply_keyword_bonus(scores, docs, user, type):
         bonus_list = []
         if type == internship:
@@ -167,13 +220,25 @@ def get_recommendations(user_id):
     internship_scores = apply_keyword_bonus(internship_scores_list, internship_docs, user, internship)
     scholarship_scores = apply_keyword_bonus(scholarship_scores_list, scholarship_docs, user, scholarship)
 
+    #Apply time weighting
+    weighted_internship_scores = [
+        time_weighting(opp, score, internship)
+        for opp, score in zip(internship_meta, internship_scores)
+    ]
+
+    weighted_scholarship_scores = [
+        time_weighting(opp, score, scholarship)
+        for opp, score in zip(scholarship_meta, scholarship_scores)
+    ]
+
+    #Final sorting
     top_internships = sorted(
-        zip(internship_meta, internship_scores), key=lambda x: x[1], reverse=True
-    )[:20]
+        zip(internship_meta, weighted_internship_scores), key=lambda x: x[1], reverse=True
+    )[:45]
 
     top_scholarships = sorted(
-        zip(scholarship_meta, scholarship_scores), key=lambda x: x[1], reverse=True
-    )[:10]
+        zip(scholarship_meta, weighted_scholarship_scores), key=lambda x: x[1], reverse=True
+    )[:45]
 
     return {
         "user": user,
