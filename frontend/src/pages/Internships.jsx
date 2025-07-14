@@ -8,24 +8,84 @@ const Internships = () => {
     const [internships, setInternships] = useState([])
     const [page, setPage] = useState(1)
     const [loading, setLoading] = useState(false)
-    const [sortBy, setSortBy] = useState("")
+    const [sortBy, setSortBy] = useState("recommended")
     const [searchQuery, setSearchQuery] = useState("")
     const [hasMore, setHasMore] = useState(true)
+    const [recommendedIds, setRecommendedIds] = useState([])
 
-    useEffect(() => {
-        const fetchRecommendations = async () => {
-            try {
-                const data = await getRecommendations("32df310e-b39a-48c8-8431-68df22bb0332")
-                console.log("Recommendations:", data);
-            }   catch (error) {
-                console.error("Error fetching recommendations:", error)
+    const pageSize = 15
+
+    //fetch recommended internships
+
+    const fetchRecommendations = async (reset = false, customSearch = searchQuery) => {
+        try {
+            setLoading(true)
+
+            const currentPage = reset ? 0 : page;
+            const from = currentPage * pageSize;
+            const to = from + pageSize;
+
+            const { data: { user }, error: useError } = await supabase.auth.getUser();
+            if(useError) console.error("User fetch error:", useError)
+            if (!user) return;
+
+            //Get user profile
+            const { data: profile, error: profileError } = await supabase
+                .from("profiles")
+                .select("user_id")
+                .eq("user_id", user.id)
+                .single();
+
+            if (profileError) {
+                console.error("Profile fetch error:", profileError)
+                return;
             }
+
+            //Get recommendations
+            const userProfile = profile.user_id
+
+            const recs = await getRecommendations(userProfile)
+            console.log(recs)
+
+            const internshipIDs = recs.internship_ids || []
+            console.log(internshipIDs)
+
+            if (reset) {
+                setRecommendedIds(internshipIDs)
+            }
+
+            const pagedIds = internshipIDs.slice(from, to);
+                
+            //Fetch internship data from supabase
+            const { data, error } = await supabase
+                .from("internships")
+                .select("*")
+                .in("id", pagedIds)
+
+            // Apply search if present
+            if (customSearch.trim()) {
+                data = data.ilike("title", `%${customSearch.toLowerCase()}%`)
+            }
+
+            if (error) {
+                console.error("Error fetching internship details:", error)
+                return;
+            } else {
+                const sortedData = pagedIds.map((id) => data.find((intern) => intern.id === id))
+                setInternships(prev => (reset ? sortedData : [...prev, ...sortedData]));
+            }
+            setPage(prev => (reset ? 1 : prev + 1));
+            setHasMore(internshipIDs.length > to)
+        }   catch (error) {
+            console.error("Error fetching recommendations:", error)
+        } finally {
+            setLoading(false)
         }
-        fetchRecommendations()
-    }, [])
+    }
+
 
     //Fetch internships 15 at a time for a page
-    const fetchInternships = async (reset = false, customSearch = searchQuery) => {
+    const fetchInternships = async (reset = false, customSearch = searchQuery, customRecommendedIds = recommendedIds) => {
         setLoading(true);
         const pageSize = 15;
         const from = reset ? 0 : (page - 1) * pageSize;
@@ -51,11 +111,13 @@ const Internships = () => {
 
             if (error) {
                 console.error("Fetch error:", error)
-            } else {
-                setInternships(reset ? data : [...internships, ...data]);
-                if (!reset) setPage((prev) => prev + 1);
-                setHasMore(data.length === pageSize);
-            }
+                return
+            } 
+
+            setInternships(prev => (reset ? data : [...prev, ...data]));
+            setPage(prev => (reset ? 1 : prev + 1))
+            setHasMore(data.length === pageSize)
+            
         } catch (err) {
             console.error("Unexpected error:", err.messege)
         };
@@ -63,8 +125,21 @@ const Internships = () => {
         setLoading(false);
     };
     
+    //Load more logic
+    const handleLoadMore = () => {
+        if (sortBy === "recommended") {
+            fetchRecommendations()
+        } else {
+            fetchInternships()
+        }
+    }
+
     useEffect(() => {
+        if (sortBy == "recommended") {
+            fetchRecommendations(true)
+        } else {
         fetchInternships(true)
+        }
     }, [sortBy, searchQuery])
 
     return (
@@ -80,7 +155,7 @@ const Internships = () => {
                             setPage(1);
                             fetchInternships(true)
                         }} >
-                            <option value="">Recommended</option>
+                            <option value="recommended">Recommended</option>
                             <option value="newest">Newly Added</option>
                             <option value="all">All Internships</option>
                         </select>
@@ -94,7 +169,11 @@ const Internships = () => {
                                 }}
                                 onClear={() => {
                                     setSearchQuery("");
-                                    fetchInternships(true, "")
+                                    if (sortBy === "recommended") {
+                                        fetchRecommendations(true, "")
+                                    } else {
+                                        fetchInternships(true, "")
+                                    }
                                 }}
                             />
                         </div>
@@ -115,7 +194,7 @@ const Internships = () => {
 
                 {!loading && hasMore && internships.length > 0 && (
                     <div className="loadMoreContainer">
-                        <button onClick={() => fetchInternships()} className="loadMore">Load More</button>
+                        <button onClick={handleLoadMore} className="loadMore">Load More</button>
                     </div>
                 )}
             </main>
