@@ -45,10 +45,8 @@ const Internships = () => {
             const userProfile = profile.user_id
 
             const recs = await getRecommendations(userProfile)
-            console.log(recs)
 
-            const internshipIDs = recs.internship_ids || []
-            console.log(internshipIDs)
+            const internshipIDs = (recs.internship_ids || []).map(i => i.id)
 
             if (reset) {
                 setRecommendedIds(internshipIDs)
@@ -63,15 +61,17 @@ const Internships = () => {
                 .in("id", pagedIds)
 
             // Apply search if present
+            let searchData = data;
+
             if (customSearch.trim()) {
-                data = data.ilike("title", `%${customSearch.toLowerCase()}%`)
+                searchData = data.ilike("title", `%${customSearch.toLowerCase()}%`)
             }
 
             if (error) {
                 console.error("Error fetching internship details:", error)
                 return;
             } else {
-                const sortedData = pagedIds.map((id) => data.find((intern) => intern.id === id))
+                const sortedData = pagedIds.map((id) => searchData.find((intern) => intern.id === id))
                 setInternships(prev => (reset ? sortedData : [...prev, ...sortedData]));
             }
             setPage(prev => (reset ? 1 : prev + 1));
@@ -85,7 +85,7 @@ const Internships = () => {
 
 
     //Fetch internships 15 at a time for a page
-    const fetchInternships = async (reset = false, customSearch = searchQuery, customRecommendedIds = recommendedIds) => {
+    const fetchInternships = async (reset = false, customSearch = searchQuery) => {
         setLoading(true);
         const pageSize = 15;
         const from = reset ? 0 : (page - 1) * pageSize;
@@ -105,6 +105,8 @@ const Internships = () => {
             //Apply filter for sortBy if selected
             if (sortBy === "newest") {
                 query = query.order("date_created", { ascending: false })
+            } else {
+                query = query.order("id", { ascending: true })
             }
 
             const { data, error } = await query;
