@@ -14,7 +14,7 @@ app.use(cors())
 app.use("/api/profiles", profileRoutes)
 app.use("/api/internships", internshipsRoutes)
 app.use('/api/recommendations', recommendationRoutes);
-app.use('/api/scholarships')
+app.use('/api/scholarships', scholarshipRoutes)
 
 
 app.get('/', (req, res)=> {
