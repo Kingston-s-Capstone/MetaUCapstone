@@ -28,7 +28,7 @@ function SearchForm({ onSearch, onClear }) {
     return (
         <div className="SearchForm">
             <form onSubmit={handleSubmit}>
-                <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Search Internships" onKeyDown={(e) => formSubmit(e)}></input>
+                <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Search Opportunities" onKeyDown={(e) => formSubmit(e)}></input>
                 <button type="submit" className="formSubmit">Submit</button>
                 <button className="reset" type="button" onClick={handleClear}>Clear</button>
             </form>
