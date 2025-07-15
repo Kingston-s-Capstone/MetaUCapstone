@@ -82,14 +82,14 @@
     background-color: #b8831f;
 }
 
-.internshipList {
+.opportunityList {
     display: flex;
     flex-direction: column;
     gap: 16px;
     width: 100%;
 }
 
-.internship {
+.opportunity {
     width: 100%;
     background-color: var(--color-card-bg);
     padding: 16px 20px;
@@ -102,24 +102,24 @@
     border-left: 6px solid var(--color-primary);
 }
 
-.internship:hover {
+.opportunity:hover {
     background-color: var(--color-hover-bg);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-.internship a {
+.opportunity a {
     font-size: 16px;
     font-weight: 700;
     color: var(--color-primary);
     text-decoration: none;
 }
 
-.internship a:hover {
+.opportunity a:hover {
     text-decoration: underline;
 }
 
-.internship .org {
+.opportunity .org {
     font-size: 14px;
     color: #555;
 }

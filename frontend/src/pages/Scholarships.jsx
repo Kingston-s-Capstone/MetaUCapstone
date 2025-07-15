@@ -4,19 +4,17 @@ import { supabase } from "../SupaBaseClient"
 import { useState, useEffect } from "react"
 import { getRecommendations } from "../utilities/data"
 
-const Internships = () => {
-    const [internships, setInternships] = useState([])
+const Scholarships = () => {
+    const [scholarships, setScholarships] = useState([])
     const [page, setPage] = useState(1)
     const [loading, setLoading] = useState(false)
     const [sortBy, setSortBy] = useState("recommended")
     const [searchQuery, setSearchQuery] = useState("")
     const [hasMore, setHasMore] = useState(true)
-    const [recommendedIds, setRecommendedIds] = useState([])
 
     const pageSize = 15
 
-    //fetch recommended internships
-
+    //Fetch recommended scholarships
     const fetchRecommendations = async (reset = false, customSearch = searchQuery) => {
         try {
             setLoading(true)
@@ -46,17 +44,13 @@ const Internships = () => {
 
             const recs = await getRecommendations(userProfile)
 
-            const internshipIDs = (recs.internship_ids || []).map(i => i.id)
+            const scholarshipIDs = (recs.scholarship_ids || []).map(i => i.id)
 
-            if (reset) {
-                setRecommendedIds(internshipIDs)
-            }
-
-            const pagedIds = internshipIDs.slice(from, to);
+            const pagedIds = scholarshipIDs.slice(from, to);
                 
-            //Fetch internship data from supabase
+            //Fetch scholarship data from supabase
             const { data, error } = await supabase
-                .from("internships")
+                .from("scholarship")
                 .select("*")
                 .in("id", pagedIds)
 
@@ -68,14 +62,14 @@ const Internships = () => {
             }
 
             if (error) {
-                console.error("Error fetching internship details:", error)
+                console.error("Error fetching scholarship details:", error)
                 return;
             } else {
-                const sortedData = pagedIds.map((id) => searchData.find((intern) => intern.id === id))
-                setInternships(prev => (reset ? sortedData : [...prev, ...sortedData]));
+                const sortedData = pagedIds.map((id) => searchData.find((scholar) => scholar.id === id))
+                setScholarships(prev => (reset ? sortedData : [...prev, ...sortedData]));
             }
             setPage(prev => (reset ? 1 : prev + 1));
-            setHasMore(internshipIDs.length > to)
+            setHasMore(scholarshipIDs.length > to)
         }   catch (error) {
             console.error("Error fetching recommendations:", error)
         } finally {
@@ -83,9 +77,8 @@ const Internships = () => {
         }
     }
 
-
-    //Fetch internships 15 at a time for a page
-    const fetchInternships = async (reset = false, customSearch = searchQuery) => {
+    //Fetch scholarships 15 at a time for a page
+    const fetchScholarships = async (reset = false, customSearch = searchQuery) => {
         setLoading(true);
         const pageSize = 15;
         const from = reset ? 0 : (page - 1) * pageSize;
@@ -93,7 +86,7 @@ const Internships = () => {
 
         try {
             let query = supabase
-                .from("internships")
+                .from("scholarships")
                 .select("*")
                 .range(from, to);
 
@@ -104,7 +97,7 @@ const Internships = () => {
 
             //Apply filter for sortBy if selected
             if (sortBy === "newest") {
-                query = query.order("date_created", { ascending: false })
+                query = query.order("created_at", { ascending: false })
             } else {
                 query = query.order("id", { ascending: true })
             }
@@ -116,7 +109,7 @@ const Internships = () => {
                 return
             } 
 
-            setInternships(prev => (reset ? data : [...prev, ...data]));
+            setScholarships(prev => (reset ? data : [...prev, ...data]));
             setPage(prev => (reset ? 1 : prev + 1))
             setHasMore(data.length === pageSize)
             
@@ -126,13 +119,13 @@ const Internships = () => {
 
         setLoading(false);
     };
-    
+
     //Load more logic
     const handleLoadMore = () => {
         if (sortBy === "recommended") {
             fetchRecommendations()
         } else {
-            fetchInternships()
+            fetchScholarships()
         }
     }
 
@@ -140,14 +133,14 @@ const Internships = () => {
         if (sortBy == "recommended") {
             fetchRecommendations(true)
         } else {
-        fetchInternships(true)
+        fetchScholarships(true)
         }
     }, [sortBy, searchQuery])
 
     return (
         <div className="page">
             <header className="pageHeader">
-                <h2>Internships</h2>
+                <h2>Scholarships</h2>
             </header>
             <main className="main">
                 <div className="searchContainer">
@@ -155,11 +148,11 @@ const Internships = () => {
                         <select value={sortBy} onChange={(e) => {
                             setSortBy(e.target.value);
                             setPage(1);
-                            fetchInternships(true)
+                            fetchScholarships(true)
                         }} >
                             <option value="recommended">Recommended</option>
                             <option value="newest">Newly Added</option>
-                            <option value="all">All Internships</option>
+                            <option value="all">All Scholarships</option>
                         </select>
                     </div>
                     <div className="searchAdd">
@@ -167,14 +160,14 @@ const Internships = () => {
                             <SearchForm 
                                 onSearch={(query) => {
                                     setSearchQuery(query);
-                                    fetchInternships(true, query)
+                                    fetchScholarships(true, query)
                                 }}
                                 onClear={() => {
                                     setSearchQuery("");
                                     if (sortBy === "recommended") {
                                         fetchRecommendations(true, "")
                                     } else {
-                                        fetchInternships(true, "")
+                                        fetchScholarships(true, "")
                                     }
                                 }}
                             />
@@ -185,16 +178,16 @@ const Internships = () => {
                     </div>
                     
                 </div>
-                <div className="opportunitiesList">
-                    {internships.map((intern) => (
-                        <div key={intern.id} className="opportunity">
-                            <a href={intern.url} target="_blank" rel="noreffer">{intern.title}</a>
-                            <span>{intern.organization}</span>
+                <div className="opportunityList">
+                    {scholarships.map((scholar) => (
+                        <div key={scholar.id} className="opportunity">
+                            <a href={scholar.url} target="_blank" rel="noreffer">{scholar.title}</a>
+                            <span>{scholar.organization}</span>
                         </div>
                     ))}
                 </div>
 
-                {!loading && hasMore && internships.length > 0 && (
+                {!loading && hasMore && scholarships.length > 0 && (
                     <div className="loadMoreContainer">
                         <button onClick={handleLoadMore} className="loadMore">Load More</button>
                     </div>
@@ -204,4 +197,4 @@ const Internships = () => {
     )
 }
 
-export default Internships
+export default Scholarships
