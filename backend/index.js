@@ -3,6 +3,7 @@ const cors = require('cors');
 const profileRoutes = require('./routes/profiles');
 const internshipsRoutes = require('./routes/internships');
 const recommendationRoutes = require('./routes/recommendation')
+const scholarshipRoutes = require('./routes/scholarships')
 
 const app = express()
 const PORT = 4000
@@ -13,6 +14,7 @@ app.use(cors())
 app.use("/api/profiles", profileRoutes)
 app.use("/api/internships", internshipsRoutes)
 app.use('/api/recommendations', recommendationRoutes);
+app.use('/api/scholarships')
 
 
 app.get('/', (req, res)=> {
