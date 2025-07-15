@@ -50,7 +50,7 @@ const Scholarships = () => {
                 
             //Fetch scholarship data from supabase
             const { data, error } = await supabase
-                .from("scholarship")
+                .from("scholarships")
                 .select("*")
                 .in("id", pagedIds)
 
