@@ -4,6 +4,17 @@ const axios = require("axios")
 const router = express.Router();
 require("dotenv").config();
 
+//Get all scholarships
+router.get("/", async (req, res) => {
+    const { data, error } = await supabase
+        .from("scholarships")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+});
+
 //Save scholarships
 router.post('/save', async (req, res) => {
     const { user_id, scholarship_id } = req.body;
