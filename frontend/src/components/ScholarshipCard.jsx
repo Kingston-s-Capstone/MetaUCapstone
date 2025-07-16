@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { FaBookmark, FaRegBookmark } from 'react-icons/fa';
 import { saveScholarship, getSavedScholarships, unsaveScholarship } from "../utilities/data";
 
-const ScholarshipCard = ({ scholar, userId}) => {
+const ScholarshipCard = ({ scholar, userId, handleRemove}) => {
     const [saved, setSaved] = useState(false)
     
     useEffect(() => {
@@ -22,6 +22,7 @@ const ScholarshipCard = ({ scholar, userId}) => {
         try {
             if (saved) {
                 await unsaveScholarship(userId.user_id, scholar.id);
+                if (handleRemove) handleRemove(scholar.id)
             } else {
                 await saveScholarship(userId.user_id, scholar.id)
             }

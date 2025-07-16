@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { FaBookmark, FaRegBookmark } from 'react-icons/fa';
 import { saveInternship, getSavedInternships, unsaveInternship } from "../utilities/data";
 
-const InternshipCard = ({ intern, userId}) => {
+const InternshipCard = ({ intern, userId, handleRemove}) => {
     const [saved, setSaved] = useState(false)
     
     useEffect(() => {
@@ -21,9 +21,10 @@ const InternshipCard = ({ intern, userId}) => {
     const toggleSave = async () => {
         try {
             if (saved) {
-                await unsaveInternship(userId.user_id, intern.id);
+                await unsaveInternship(userId, intern.id);
+                if (handleRemove) handleRemove(intern.id)
             } else {
-                await saveInternship(userId.user_id, intern.id)
+                await saveInternship(userId, intern.id)
             }
             setSaved(!saved)
         } catch (err) {
