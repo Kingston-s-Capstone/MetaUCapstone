@@ -13,7 +13,7 @@ router.post('/save', async (req, res) => {
         .insert([{ user_id, scholarship_id }]);
 
     if (error) return res.status(500).json({ error: error.message });
-    res.json({ message: 'scholarship saved'})
+    res.json({ message: 'scholarship saved', data})
 });
 
 //Unsave scholarships
