@@ -41,7 +41,7 @@ export const saveInternship = (user_id, internship_id) => API.post('/internships
 export const saveScholarship = (user_id, scholarship_id) => API.post('/scholarships/save', { user_id, scholarship_id});
 
 //Unsave
-export const unsaveInternship = (user_id, internship_id) => API.delete('/internships/unsave', {data: { user_id, scholarship_id }})
+export const unsaveInternship = (user_id, internship_id) => API.delete('/internships/unsave', {data: { user_id, internship_id }})
 export const unsaveScholarship = (user_id, scholarship_id) => API.delete('/scholarships/unsave', {data: { user_id, scholarship_id }})
 
 //Get saved

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react"
-import { toast } from 'react-toastify'
 import { FaBookmark, FaRegBookmark } from 'react-icons/fa';
 import { saveScholarship, getSavedScholarships, unsaveScholarship } from "../utilities/data";
 
