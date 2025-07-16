@@ -7,6 +7,7 @@ import ProfilePage from './pages/ProfilePage';
 import Navigation from './components/Navigation';
 import Internships from './pages/Internships';
 import Scholarships from './pages/Scholarships';
+import SavedOpportunities from './pages/Saved';
 
 export const router = createBrowserRouter([
     {  path: "/", element: <Signup /> },
@@ -34,6 +35,12 @@ export const router = createBrowserRouter([
         ),
         children: [
             { path: "/scholarshippage", element: <Scholarships /> }
+        ]
+    },
+    { path: "/saved", element: ( <PrivateRoute><Navigation /></PrivateRoute>
+        ),
+        children: [
+            { path: "/saved", element: <SavedOpportunities /> }
         ]
     },
 ])
