@@ -1,4 +1,4 @@
-import { getSavedInternships, getSavedScholarships, unsaveInternship, unsaveScholarship } from "../utilities/data";
+import { getSavedInternships, getSavedScholarships, unsaveInternship, unsaveScholarship, getInternships, getScholarships } from "../utilities/data";
 import { useEffect, useState } from "react";
 import SearchForm from "../components/SearchForm";
 import ScholarshipCard from "../components/ScholarshipCard";
@@ -26,16 +26,23 @@ const SavedOpportunities = () => {
         const fetchData = async () => {
             if (!currentUser) return;
 
-            const [scholarshipRes, internshipRes] = await Promise.all([
+            const [savedInternships, savedScholarships, allInternships, allScholarships] = await Promise.all([
                 getSavedInternships(currentUser.id),
-                getSavedScholarships(currentUser.id)
+                getSavedScholarships(currentUser.id),
+                getInternships(),
+                getScholarships()
             ]);
-            
-            const sortedScholarships = scholarshipRes.data.sort((a, b) =>
-                new Date(a.scholarships.deadline) - new Date(b.scholarships.deadline));
 
-            const sortedInternships = internshipRes.data.sort((a, b) => 
-                new DataTransfer(a.internships.date_validthrough) - new Date(b.internships.date_validthrough));
+            const savedInternshipIds = savedInternships.data.map((entry) => entry.internship_id)
+            const savedScholarshipIds = savedScholarships.data.map((entry) => entry.scholarship_id)
+            
+            const sortedInternships = allInternships.data
+                .filter((intern) => savedInternshipIds.includes(intern.id))
+                .sort((a, b) => new Date(a.date_validthrough) - new Date(b.date_validthrough))
+
+            const sortedScholarships = allScholarships.data
+                .filter((scholarship) => savedScholarshipIds.includes(scholarship.id))
+                .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
 
             setScholarships(sortedScholarships);
             setInternships(sortedInternships)
@@ -63,13 +70,13 @@ const SavedOpportunities = () => {
     }
 
     //filter for search queries
-    const filteredScholarships = scholarships.filter(({ scholarships }) => 
-        scholarships.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        scholarships.organization.toLowerCase().includes(searchQuery.toLowerCase()));
+    const filteredScholarships = scholarships.filter(( scholarship ) =>
+        scholarship.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        scholarship.organization.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    const filteredInternships = internships.filter(({ internships }) => 
-        internships.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        internships.organization.toLowerCase().includes(searchQuery.toLowerCase()));
+    const filteredInternships = internships.filter(( internship ) => 
+        internship.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        internship.organization.toLowerCase().includes(searchQuery.toLowerCase()));
 
     if (!currentUser) return <div className="page">Loading user...</div>;
 
@@ -78,19 +85,23 @@ const SavedOpportunities = () => {
             <div className="pageHeader">Saved Opportunities</div>
 
             <div className="searchContainer">
-                <SearchForm
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
-                    onClear={() => setSearchQuery('')}
-                />
+                <div className="searchAdd">
+                    <div className="search">
+                        <SearchForm
+                            searchQuery={searchQuery}
+                            setSearchQuery={setSearchQuery}
+                            onClear={() => setSearchQuery('')}
+                        />
+                    </div>
+                </div>
             </div>
 
             <div className="saved-opportunity-columns">
-                <div className="saved-column">
+                <div className="column">
                     <h3>Scholarships</h3>
                     <div className="opportunityList">
                         {filteredScholarships.length > 0 ? (
-                            filteredScholarships.map(({ scholarships }) => (
+                            filteredScholarships.map(( scholarships ) => (
                                 <ScholarshipCard
                                     key={scholarships.id}
                                     scholar={scholarships}
@@ -103,11 +114,11 @@ const SavedOpportunities = () => {
                         )}
                     </div>
                 </div>
-                <div className="saved-column">
+                <div className="column">
                     <h3>Internships</h3>
                     <div className="opportunityList">
                         {filteredInternships.length > 0 ? (
-                            filteredInternships.map(({ internships }) => (
+                            filteredInternships.map(( internships ) => (
                                 <InternshipCard
                                     key={internships.id}
                                     intern={internships}
