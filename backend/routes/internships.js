@@ -127,6 +127,47 @@ router.post("/userInput", async(req, res) => {
     }
 });
 
+//Save Internships
+router.post('/save', async (req, res) => {
+    const { user_id, internship_id } = req.body;
+
+    const { data, error } = await supabase
+        .from('saved_internships')
+        .insert([{ user_id, internship_id }])
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ message: 'Internship saved!', data})
+});
+
+//Get saved internships
+router.get('/saved/:user_id', async (req, res) => {
+    const { user_id } = req.params;
+
+    const { data, error } = await supabase
+        .from('saved_internships')
+        .select('*, internships(*)');
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data)
+});
+
+//Unsave internships
+router.delete('/unsave', async (req, res) => {
+    const { user_id, internship_id } = req.body;
+
+    try {
+        const { error } = await supabase
+            .from('saved_internships')
+            .delete()
+            .match({ user_id, internship_id })
+        
+        if (error) throw error;
+        res.status(200).json({ message: 'Scholarship unsaved successfully'})
+    } catch (err) {
+        res.status(500).json({ error: err.message})
+    }
+});
+
 // Delete internships
 router.delete("/cleanup", async (req, res) => {
     try {

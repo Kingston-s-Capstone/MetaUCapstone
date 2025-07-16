@@ -3,6 +3,8 @@ import "./Opportunities.css"
 import { supabase } from "../SupaBaseClient"
 import { useState, useEffect } from "react"
 import { getRecommendations } from "../utilities/data"
+import ScholarshipCard from "../components/ScholarshipCard"
+import InternshipCard from "../components/InternshipCard"
 
 const Internships = () => {
     const [internships, setInternships] = useState([])
@@ -11,7 +13,7 @@ const Internships = () => {
     const [sortBy, setSortBy] = useState("recommended")
     const [searchQuery, setSearchQuery] = useState("")
     const [hasMore, setHasMore] = useState(true)
-    const [recommendedIds, setRecommendedIds] = useState([])
+    const [currentUser, setCurrentUser] = useState(null)
 
     const pageSize = 15
 
@@ -39,6 +41,8 @@ const Internships = () => {
             if (profileError) {
                 console.error("Profile fetch error:", profileError)
                 return;
+            } else {
+                setCurrentUser(profile)
             }
 
             //Get recommendations
@@ -47,10 +51,6 @@ const Internships = () => {
             const recs = await getRecommendations(userProfile)
 
             const internshipIDs = (recs.internship_ids || []).map(i => i.id)
-
-            if (reset) {
-                setRecommendedIds(internshipIDs)
-            }
 
             const pagedIds = internshipIDs.slice(from, to);
                 
@@ -187,10 +187,7 @@ const Internships = () => {
                 </div>
                 <div className="opportunitiesList">
                     {internships.map((intern) => (
-                        <div key={intern.id} className="opportunity">
-                            <a href={intern.url} target="_blank" rel="noreffer">{intern.title}</a>
-                            <span>{intern.organization}</span>
-                        </div>
+                        <InternshipCard key={intern.id} intern={intern} userId={currentUser}/>
                     ))}
                 </div>
 

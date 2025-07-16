@@ -3,6 +3,8 @@ import "./Opportunities.css"
 import { supabase } from "../SupaBaseClient"
 import { useState, useEffect } from "react"
 import { getRecommendations } from "../utilities/data"
+import ScholarshipCard from "../components/ScholarshipCard"
+
 
 const Scholarships = () => {
     const [scholarships, setScholarships] = useState([])
@@ -11,6 +13,7 @@ const Scholarships = () => {
     const [sortBy, setSortBy] = useState("recommended")
     const [searchQuery, setSearchQuery] = useState("")
     const [hasMore, setHasMore] = useState(true)
+    const [currentUser, setCurrentUser] = useState(null)
 
     const pageSize = 15
 
@@ -37,6 +40,8 @@ const Scholarships = () => {
             if (profileError) {
                 console.error("Profile fetch error:", profileError)
                 return;
+            } else {
+                setCurrentUser(profile)
             }
 
             //Get recommendations
@@ -180,11 +185,9 @@ const Scholarships = () => {
                 </div>
                 <div className="opportunityList">
                     {scholarships.map((scholar) => (
-                        <div key={scholar.id} className="opportunity">
-                            <a href={scholar.url} target="_blank" rel="noreffer">{scholar.title}</a>
-                            <span>{scholar.organization}</span>
-                        </div>
-                    ))}
+                        <ScholarshipCard key={scholar.id} scholar={scholar} userId={currentUser} />
+                    )
+                    )}
                 </div>
 
                 {!loading && hasMore && scholarships.length > 0 && (
