@@ -33,10 +33,11 @@ const ScholarshipCard = ({ scholar, userId}) => {
     }
     return (
         <div key={scholar.id} className="opportunity">
-            <a href={scholar.url} target="_blank" rel="noreffer">{scholar.title}</a>
-            <span>{scholar.organization}</span>
-    
-            <button className="save" onClick={toggleSave} title="Save">
+            <div className="opportunityContent">
+                <a href={scholar.url} target="_blank" rel="noreffer">{scholar.title}</a>
+                <span>{scholar.organization}</span>
+            </div>
+            <button className={`save ${saved ? 'saved' : ''}`} onClick={toggleSave} title={saved ? 'Unsave' : 'Save'}>
                 {saved ? <FaBookmark /> :  <FaRegBookmark />}
             </button>
         </div>
