@@ -54,7 +54,7 @@ const SavedOpportunities = () => {
     const removeScholarship = async (id) => {
         try {
             await unsaveScholarship(currentUser.id, id);
-            setScholarships((prev) => prev.filter((item) => item.scholarships.id !== id));
+            setScholarships((prev) => prev.filter((item) => item.id !== id));
         } catch (err) {
             console.error("Failed to unsave scholarship", err);
         }
@@ -63,7 +63,7 @@ const SavedOpportunities = () => {
     const removeInternship = async (id) => {
         try {
             await unsaveInternship(currentUser.id, id);
-            setScholarships((prev) => prev.filter((item) => item.internships.id !== id));
+            setScholarships((prev) => prev.filter((item) => item.id !== id));
         } catch (err) {
             console.error("Failed to unsave internship", err);
         }
