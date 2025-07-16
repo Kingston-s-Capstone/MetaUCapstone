@@ -88,8 +88,7 @@ const SavedOpportunities = () => {
                 <div className="seardAdd">
                     <div className="search">
                         <SearchForm
-                            searchQuery={searchQuery}
-                            setSearchQuery={setSearchQuery}
+                            onSearch={(query) => {setSearchQuery(query)}}
                             onClear={() => setSearchQuery('')}
                 />
                     </div>
