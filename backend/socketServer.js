@@ -1,14 +1,14 @@
 //sets up the socket.io server for real-time communication
 //also maps socket.id to user_id so I can send targetted messages
 const { Server } = require("socket.io")
-const supabase = require("./supabaseClient")
+const { supabase } = require("./supabaseClient")
 
 const connectedUsers = new Map();
 
 function initializeSocket(server) {
     const io = new Server(server, {
         cors: {
-            origin: "http://localhost:5173/", 
+            origin: "http://localhost:5173", 
             methods: ["GET","POST"],
         },
     });

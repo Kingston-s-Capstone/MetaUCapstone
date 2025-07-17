@@ -13,7 +13,7 @@ exports.createNotification = async (req, res) => {
             .from("user_preferences")
             .select("in_app_notifications")
             .eq("user_id", user_id)
-            .single();
+            .maybeSingle();
         if (prefError) {
             console.warn("Preference fetch error:", prefError.message)
         }

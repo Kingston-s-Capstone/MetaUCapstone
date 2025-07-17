@@ -1,5 +1,5 @@
 //handles interaction with supabase
-const supabase =  require("../supabaseClient");
+const { supabase } =  require("../supabaseClient");
 
 //Create notification
 exports.create = async ({ user_id, type, title, message, url}) => {
