@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState, useContext } from "react";
 import { supabase } from "../SupaBaseClient";
+import socket from "../utilities/socket";
 
 
 const AuthContext = createContext();
@@ -85,6 +86,15 @@ export const AuthContextProvider = ({ children }) => {
             if (session?.user) {
                 insertProfile(session.user)
             }
+            
+            if (session?.access_token) {
+                socket.connect();
+                socket.emit("register", session.access_token)
+
+                socket.on("new_notifications", (notifications) => {
+                    console.log("New notification received", notifications)
+                })
+            }
         });
 
         supabase.auth.onAuthStateChange((_event, session) => {
@@ -92,6 +102,15 @@ export const AuthContextProvider = ({ children }) => {
 
             if (session?.user) {
                 insertProfile(session.user)
+            }
+
+            if (session?.access_token) {
+                socket.connect();
+                socket.emit("register", session.access_token);
+
+                socket.on("new_notification", (notification) => {
+                    console.log("New notification received:", notification)
+                })
             }
         })
     }, []);
