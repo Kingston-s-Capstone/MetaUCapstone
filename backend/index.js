@@ -1,14 +1,19 @@
 const express = require("express")
+const http = require("http")
 const cors = require('cors');
 const profileRoutes = require('./routes/profiles');
 const internshipsRoutes = require('./routes/internships');
 const recommendationRoutes = require('./routes/recommendation')
 const scholarshipRoutes = require('./routes/scholarships')
 const notificationRoutes = require("./routes/notifications")
+const initializeSocket = require("./socketServer")
 
 const app = express()
+const server = http.createServer(app);
+const { io, emitToUser } = initializeSocket(server)
 const PORT = 4000
 
+app.set("emitToUser", emitToUser)
 app.use(express.json())
 app.use(cors())
 
