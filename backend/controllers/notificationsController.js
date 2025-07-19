@@ -20,7 +20,7 @@ exports.createNotification = async (req, res) => {
         //send real time notification via socket.io if user is opted in
         if (prefs?.in_app_notifications) {
             const emitToUser = req.app.get("emitToUser")
-            emitToUser(user_id, "new_notifications", {
+            emitToUser(user_id, "new_notification", {
                 id: notification.id,
                 title,
                 message,
