@@ -5,12 +5,12 @@ function createNotificationTriggerRoutes(emitToUser) {
     const router = express.Router()
 
     //Weighted helper function
-    const weightedProfileText = (profile) => {
+    const changeToText = (profile) => {
         return (
-            ((profile.career_interests || "") + " ").repeat(3) +
-            ((profile.major || "") + " ").repeat(2) +
-            ((profile.classification || "") + " ").repeat(2) +
-            ((profile.location_preferences || "") + " ").repeat(3)
+            ((profile.career_interests || "") + " ") +
+            ((profile.major || "") + " ") +
+            ((profile.classification || "") + " ") +
+            ((profile.location_preferences || "") + " ")
         ).toLowerCase();
     }
 
@@ -22,19 +22,27 @@ function createNotificationTriggerRoutes(emitToUser) {
         try {
             const { data: profiles, error } = await supabase
                 .from("profiles")
-                .select("user_id, major, career_interests, classification, location_preferences")
+                .select("user_id, major, career_interests")
 
             if (error) throw error;
 
             profiles.forEach((profile) => {
-                const profileText = weightedProfileText(profile);
-                const titleText = (title || "").toLowerCase();
+                const profileText = changeToText(profile);
+                const profileSet = new Set(
+                    profileText
+                        .split(/\s+/)
+                        .map((word) => word.toLowerCase())
+                );
 
-                const isMatch = profileText
-                    .split(" ")
-                    .some((term) => titleText.includes(term))
+                const titleSet = new Set(
+                    (title || "")
+                        .toLowerCase()
+                        .split(/\s/)
+                );
 
-                if (isMatch) {
+                const hasMatch = [...profileSet].some((term) => titleSet.has(term));
+
+                if (hasMatch) {
                     const link = url
                     emitToUser(profile.user_id, "new_notification", {
                         message: `New Internship matches your profile, check it out: ${title}`,
@@ -62,14 +70,19 @@ function createNotificationTriggerRoutes(emitToUser) {
             if (error) throw error;
 
             profiles.forEach((profile) => {
-                const profileText = weightedProfileText(profile);
+                const profileText = changeToText(profile);
+                const profileSet = new Set(
+                    profileText
+                        .split(/\s+/)
+                        .map((word) => word.toLowerCase())
+                );
+
                 const combinedText = `${title || ""} ${desciption || ""}`.toLowerCase();
+                const combinedSet = new Set(combinedText.split(/\s+/))
 
-                const isMatch = profileText
-                    .split(" ")
-                    .some((term) => combinedText.includes(term))
+                const hasMatch = [...profileSet].some((word) => combinedSet.has(term));
 
-                if (isMatch) {
+                if (hasMatch) {
                     const link = url
                     emitToUser(profile.user_id, "new_notification", {
                         message: `New Scholarship matches your profile, check it out: ${title}`,
