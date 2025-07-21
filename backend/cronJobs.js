@@ -18,6 +18,17 @@ function initializeCronJobs() {
             console.error("Cron job failed:", err.message);
         }
     })
+
+    cron.schedule(" * 10 * * *", async () => {
+        console.log("Running daily inactive user emaill check")
+
+        try {
+            const response = await axios.post("http://localhost:4000/check-inactive-users");
+            console.log("Inactive user check response:", response.data)
+        } catch (error) {
+            console.error("Inactive user check failed", error.response?.data || error.message)
+        }
+    })
 }
 
 module.exports = initializeCronJobs

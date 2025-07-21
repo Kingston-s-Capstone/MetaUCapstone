@@ -1,5 +1,6 @@
 const express = require("express")
 const { supabase } = require('../supabaseClient');
+const sendEmail = require('../utilities/sendEmail')
 
 function createNotificationTriggerRoutes(emitToUser) {
     const router = express.Router()
@@ -211,6 +212,78 @@ function createNotificationTriggerRoutes(emitToUser) {
         } catch (err) {
             console.error("Error in deadline trigger:", err);
             res.status(500).json({ error: "Deadline trigger failed" });
+        }
+    })
+
+    router.post("/check-inactive-users", async (req, res) => {
+
+        const checkInactiveUsers = async () => {
+            const now = new Date();
+            const sevenDaysAgo = new Date(now);
+            sevenDaysAgo.setDate(now.getDate() - 7);
+
+            const { data, error } = await supabase.auth.admin.listUsers();
+
+            if (error) {
+                console.error("Error fetching users:", error);
+                return;
+            }
+
+            const users = data?.users ?? [];
+
+            for (const user of users) {
+                const { id: user_id, email, last_sign_in_at } = user;
+
+                if (!last_sign_in_at) continue;
+
+                const lastSignIn = new Date(last_sign_in_at);
+                if (lastSignIn > sevenDaysAgo) continue; //user logged in recently
+
+                //check if inactive email was already send
+                const { data: alreadySent, error: checkError } = await supabase
+                    .from("sent_email_notifications")
+                    .select("id")
+                    .eq("user_id", user_id)
+                    .eq("notification_type", "inactive_reminder")
+                    .gte("date_sent", sevenDaysAgo.toISOString())
+                    .maybeSingle()
+
+                if (checkError) {
+                    console.error("Check email send error:", checkError);
+                    continue;
+                }
+
+                if (alreadySent) continue;
+
+                //send the email
+                await sendEmail({
+                    to: email,
+                    subject: "We miss you at UpliftED!",
+                    html: `
+                        <p>Hey there!</p>
+                        <p>We've haven't seen you in a while. We have new opportunities added. Come back and apply before deadlines pass!</p>
+                        `
+                });
+
+                //log the email so it isn't resent
+                await supabase.from("sent_email_notifications").insert([
+                    {
+                        user_id,
+                        notification_type: "inactive_reminder",
+                        date_sent: Date(now)
+                    }
+                ]);
+
+                console.log(`Inactive reminder email send to ${email}`);
+            }
+        }
+
+        try {
+            await checkInactiveUsers();
+            res.status(200).json({ success: true });
+        } catch (err) {
+            console.error("Inactive user check failed:", err);
+            res.status(500).json({ error: "Inactive check failed" })
         }
     })
     return router
