@@ -8,6 +8,7 @@ const scholarshipRoutes = require('./routes/scholarships')
 const notificationRoutes = require("./routes/notifications")
 const createNotificationTriggerRoutes = require("./routes/notificationTrigger")
 const initializeSocket = require("./socketServer")
+const initializeCronJobs = require("./cronJobs")
 
 const app = express()
 const server = http.createServer(app);
@@ -33,6 +34,7 @@ app.get('/', (req, res)=> {
     res.send('UpliftED API is running')
 })
 
+initializeCronJobs()
 server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`)
 })

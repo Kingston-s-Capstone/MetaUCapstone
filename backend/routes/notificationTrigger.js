@@ -117,7 +117,7 @@ function createNotificationTriggerRoutes(emitToUser) {
                         .select(`
                             user_id,
                             ${joinField},
-                            ${type === "internship" ? `${joinField}(${dateField}, titile)` : `${joinField}(${dateField}, title)`}
+                            ${type === "internship" ? `${joinField}(${dateField}, title)` : `${joinField}(${dateField}, title)`}
                         `);
 
                     if (error) {
@@ -194,9 +194,9 @@ function createNotificationTriggerRoutes(emitToUser) {
 
         try {
             await checkAndNotify({
-                table: "saved_internship",
+                table: "saved_internships",
                 joinField: "internship_id",
-                dateField: "date_validation",
+                dateField: "date_validthrough",
                 type: "internship",
             });
 
