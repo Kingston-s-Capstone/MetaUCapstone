@@ -89,11 +89,17 @@ export const AuthContextProvider = ({ children }) => {
             
             if (session?.access_token) {
                 socket.connect();
+
+                socket.on("connect", () => {
+                console.log("Connected to Socket.IO", socket.id);
+                });
+
+                socket.on("connect_error", (err) => {
+                console.error("Socket connection error:", err.message);
+                });
+
                 socket.emit("register", session.access_token)
 
-                socket.on("new_notifications", (notifications) => {
-                    console.log("New notification received", notifications)
-                })
             }
         });
 
@@ -108,11 +114,18 @@ export const AuthContextProvider = ({ children }) => {
                 socket.connect();
                 socket.emit("register", session.access_token);
 
-                socket.on("new_notification", (notification) => {
-                    console.log("New notification received:", notification)
-                })
             }
         })
+    }, []);
+
+    useEffect(() => {
+        socket.on("new_notification", (notification) => {
+            console.log("New notification received:", notification)
+        })
+
+        return () => {
+            socket.off("new_notification")
+        };
     }, []);
 
     // Sign out
