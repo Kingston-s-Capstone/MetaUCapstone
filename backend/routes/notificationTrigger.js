@@ -96,6 +96,123 @@ function createNotificationTriggerRoutes(emitToUser) {
             res.status(500).json({ error: "Scholarship notification failed"})
         }
     })
+
+    //saved opportunities deadline notifications route
+    router.post("/check-deadlines", async (req, res) => {
+        const now = new Date();
+        const intervals = [
+            { label: "7_days", days: 7 },
+            { label: "3_days", days: 3 },
+            { label: "day_of", days: 0 }
+        ];
+
+        const checkAndNotify = async ({ table, joinField, dateField, type }) => {
+            for (const { label, days } of intervals) {
+                const targetDate = new Date(now);
+                targetDate.setDate(targetDate.getDate() + days);
+
+                try {
+                    const { data, error } = await supabase
+                        .from(table)
+                        .select(`
+                            user_id,
+                            ${joinField},
+                            ${type === "internship" ? `${joinField}(${dateField}, titile)` : `${joinField}(${dateField}, title)`}
+                        `);
+
+                    if (error) {
+                        console.error(`Error fetching from ${table}:`, error);
+                        continue
+                    };
+
+                    for (const item of data) {
+                        const user_id = item.user_id;
+                        const opportunity_id = item[joinField];
+                        const opportunity = item[joinField];
+                        const deadline = opportunity?.[dateField];
+                        const title = opportunity?.title;
+
+                        //skip if no deadlines
+                        if (!deadline) continue;
+
+                        //standardize date comparison (ex. strip time if a timestamp)
+                        const deadlineDate = new Date(deadline);
+                        const normalizedDeadline = new Date(
+                            deadlineDate.getFullYear(),
+                            deadlineDate.getMonth(),
+                            deadlineDate.getDate()
+                        );
+
+                        const normalizedTarget = new Date(
+                            targetDate.getFullYear(),
+                            targetDate.getMonth(),
+                            targetDate.getDate()
+                        );
+
+                        //only trigger if matches this interval
+                        if (normalizedDeadline.getTime() !== normalizedTarget.getTime()) continue;
+
+                        //check if notif was already sent
+                        const { data: sent, error: sentError } = await supabase
+                            .from("sent_deadline_notifications")
+                            .select("id")
+                            .eq("user_id", user_id)
+                            .eq("opportuntiy_id", opportunity_id)
+                            .eq("opportunity_type", type)
+                            .eq("notification_type", label)
+                            .maybeSingle();
+
+                        if (sentError) {
+                            console.error("Sent check failed", sentError)
+                            continue;
+                        }
+
+                        if (!sent) {
+                        emitToUser(user_id, "new_notification", {
+                            message: `${type === "internship" ? "Internship" : "Scholarship"} due in ${
+                                days === 0 ? "today!" : `${days} day(s)`
+                            }: ${title}`,
+                            url
+                        });
+
+                        // Insert record to prevent duplicate
+                        await supabase.from("sent_deadline_notifications").insert([
+                            {
+                                user_id,
+                                opportunity_id,
+                                opportunity_type: type,
+                                notification_type: label,
+                            },
+                        ]);
+                    }
+                }
+            } catch (err) {
+                console.error(`Failed to process ${type} for ${label}:`, err)
+            }
+            }
+        };
+
+        try {
+            await checkAndNotify({
+                table: "saved_internship",
+                joinField: "internship_id",
+                dateField: "date_validation",
+                type: "internship",
+            });
+
+            await checkAndNotify({
+                table: "saved_scholarships",
+                joinField: "scholarship_id",
+                dateField: "deadline",
+                type: "scholarship"
+            });
+
+            res.status(200).json({ success: true });
+        } catch (err) {
+            console.error("Error in deadline trigger:", err);
+            res.status(500).json({ error: "Deadline trigger failed" });
+        }
+    })
     return router
 }
 module.exports = createNotificationTriggerRoutes;
