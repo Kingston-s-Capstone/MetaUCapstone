@@ -1,0 +1,40 @@
+:root {
+    --color-primary: #0A2342;
+    --color-accent: #D39C2A;
+    --color-bg: #F8F8F5;
+    --color-text: #2D2D2D;
+    --color-card-bg: #ffffff;
+    --color-hover-bg: #f5f5f5;
+}
+
+.notificationCard {
+    background-color: var(--color-card-bg);
+    color: var(--color-text);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    border: 1px solid var(--color-hover-bg);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.notificationCard:hover {
+    background-color: var(--color-hover-bg);
+    transform: scale(1.05);
+}
+
+.notificationCard.unread {
+    border-left: 5px solid var(--color-primary);
+}
+
+.notificationMessage {
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 0.3rem;
+}
+
+.notificationTime {
+    font-size: 0.85rem;
+    color: #777;
+}
