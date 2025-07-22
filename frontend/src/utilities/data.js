@@ -57,6 +57,6 @@ export const markNotificationAsRead = async (notificationId) => {
     const res = await API.patch(`/notifications/${notificationId}/read`);
     return res.data
 }
-export const getUserNotifications = (user_id) => API.get('/notifications', `${user_id}`)
+export const getUserNotifications = () => API.get('/notifications', `${user_id}`)
 
 export default API

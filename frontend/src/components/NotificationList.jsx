@@ -10,7 +10,7 @@ const NotificationList = ({ userId }) => {
     useEffect(() => {
         const fetchNotifications = async () => {
             try {
-                const res = await getUserNotifications(userId);
+                const res = await getUserNotifications();
                 setNotifications(res.data)
             } catch (err) {
                 console.error("Failed to fetch notifications:", err)

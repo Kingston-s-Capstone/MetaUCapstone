@@ -39,7 +39,8 @@ exports.createNotification = async (req, res) => {
 //get user notis
 exports.getUserNotifications = async (req, res) => {
     try {
-        const notifications = await notificationService.getByUserId(req.user_id)
+        const user_id = req.user.id 
+        const notifications = await notificationService.getByUserId(user_id)
         res.json(notifications)
     } catch (err) {
         res.status(500).json({ error: err.message })
