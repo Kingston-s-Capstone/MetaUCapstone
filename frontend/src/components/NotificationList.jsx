@@ -1,21 +1,17 @@
 import React, { useEffect, useState } from "react"
 import NotificationCard from "./NotificationCard"
 import "./NotificationList.css"
+import { markNotificationAsRead, getUserNotifications } from "../utilities/data"
 
-const NotificationList = ({ userId, onCardClick }) => {
+const NotificationList = ({ userId }) => {
     const [notifications, setNotifications] = useState([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         const fetchNotifications = async () => {
             try {
-                const res = await fetch("/api/notifications", {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("access_token")}`
-                    },
-                });
-                const data = await res.json();
-                setNotifications(data || [])
+                const res = await getUserNotifications(userId);
+                setNotifications(res.data)
             } catch (err) {
                 console.error("Failed to fetch notifications:", err)
             } finally {
@@ -24,6 +20,17 @@ const NotificationList = ({ userId, onCardClick }) => {
         };
         fetchNotifications();
     }, [])
+
+    const handleCardClick = async (notif) => {
+        if (!notif.read) {
+            await markNotificationAsRead(notif.id);
+            setNotifications((prev) =>
+                prev.map((n) => 
+                    n.id === notif.id ? { ...n, read: true } : n 
+                )
+            )
+        }
+    }
 
     if (loading) return <p>Loading noifications....</p>
 
@@ -36,7 +43,7 @@ const NotificationList = ({ userId, onCardClick }) => {
                     <NotificationCard 
                         key={notif.id} 
                         notification={notif} 
-                        onClick={() => onCardClick?.(notif)}/>
+                        onClick={() => handleCardClick(notif)}/>
                 ))
             )}
         </div>

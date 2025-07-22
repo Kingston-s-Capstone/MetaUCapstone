@@ -5,7 +5,7 @@ const NotificationCard = ({ notification, onClick }) => {
     return (
         <div
             className={`notificationCard ${notification.status === 'unread' ? 'unread' : ''}`}
-            onClick={() => onClick(notification)}
+            onClick={onClick}
         >
             <div className="notificationMessage">
                 {notification.message}
