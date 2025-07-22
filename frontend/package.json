@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@novu/notification-center": "^2.0.0",
+    "@novu/react": "^3.6.0",
     "@supabase/supabase-js": "^2.51.0",
     "axios": "^1.10.0",
     "react": "^19.1.0",

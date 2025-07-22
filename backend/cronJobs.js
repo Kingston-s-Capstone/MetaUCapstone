@@ -19,7 +19,8 @@ function initializeCronJobs() {
         }
     })
 
-    cron.schedule(" * 10 * * *", async () => {
+    //run once every day at 10am
+    cron.schedule(" 0 10 * * *", async () => {
         console.log("Running daily inactive user emaill check")
 
         try {
