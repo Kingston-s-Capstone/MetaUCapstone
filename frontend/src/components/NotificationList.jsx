@@ -3,7 +3,7 @@ import NotificationCard from "./NotificationCard"
 import "./NotificationList.css"
 import { markNotificationAsRead, getUserNotifications } from "../utilities/data"
 
-const NotificationList = ({ userId }) => {
+const NotificationList = () => {
     const [notifications, setNotifications] = useState([])
     const [loading, setLoading] = useState(true)
 
