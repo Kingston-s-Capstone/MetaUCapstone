@@ -1,0 +1,34 @@
+:root {
+    --color-primary: #0A2342;
+    --color-accent: #D39C2A;
+    --color-bg: #F8F8F5;
+    --color-text: #2D2D2D;
+    --color-card-bg: #ffffff;
+    --color-hover-bg: #f5f5f5;
+}
+
+.notification-bell {
+    position: relative;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bell-icon {
+    font-size: 1.5rem;
+    color: var(--color-text);
+}
+
+.notification-count {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    background-color: var(--color-accent);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 50%;
+    font-weight: bold;
+}
