@@ -22,13 +22,16 @@ const NotificationList = ({ userId }) => {
     }, [])
 
     const handleCardClick = async (notif) => {
-        if (!notif.read) {
+        if (notif.status === 'read') return
+        try {
             await markNotificationAsRead(notif.id);
             setNotifications((prev) =>
                 prev.map((n) => 
                     n.id === notif.id ? { ...n, read: true } : n 
                 )
             )
+        } catch (err) {
+            console.error("Failed to mark as read:", err)
         }
     }
 
