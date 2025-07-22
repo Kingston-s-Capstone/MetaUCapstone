@@ -3,8 +3,6 @@ import "../components/Navigation.css"
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { UserAuth } from '../context/AuthContext'
-import NotificationCenterModal from './NotificationModal'
-import {NotificationBell} from '@novu/notification-center'
 
 const Navigation = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,13 +19,10 @@ const Navigation = () => {
         }
     }
 
-    const toggleModal = () => setIsModalOpen(!isModalOpen)
-
     return (
         <>
             <nav className='navbar'>
                 <ul className='navbarList'>
-                    <li onClick={toggleModal}><NotificationBell /></li>
                     <li><Link to="/dashboard">Dashboard</Link></li>
                     <li><Link to="/saved">Saved</Link></li>
                     <li><Link to="/internshippage">Internships</Link></li>
@@ -36,7 +31,6 @@ const Navigation = () => {
                     <li><p onClick={handleSignOut} className='signOut'>Sign Out</p></li>
                 </ul>
             </nav>
-            <NotificationCenterModal isOpen={isModalOpen} onClose={toggleModal} />
             <main className='content'>
                 <Outlet />
             </main>
