@@ -6,7 +6,10 @@ const NotificationCard = ({ notification, onClick }) => {
         <div
             className={`notificationCard ${notification.status === 'unread' ? 'unread' : ''}`}
             onClick={onClick}
-        >
+        >   
+            <div className="notificationTitle">
+                <a href={notification.url} target="_blank">{notification.title}</a>
+            </div>
             <div className="notificationMessage">
                 {notification.message}
             </div>
