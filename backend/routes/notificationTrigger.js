@@ -364,7 +364,77 @@ function createNotificationTriggerRoutes(emitToUser) {
     })
 
     //add email notif for unread notifs
+    router.post("/check-unread", async (req, res) => {
+        const sendReminderForUnreadNotifs = async () => {
+            const oneWeekAgo = new Date()
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
+            //get all unread notifs older than 7 days
+            const { data: unreadNotifs, error } = await supabase
+                .from("notifications")
+                .select("id, user_id, title, created_at")
+                .eq("status", "unread")
+                .lt("created_at", oneWeekAgo.toISOString())
+
+            if (error) {
+                console.error("Error fetching old unread notifications:", error.message)
+                return
+            }
+
+            //group by user
+            const userMap = new Map();
+            unreadNotifs.forEach((notif) => {
+                if (!userMap.has(notif.user_id)) {
+                    userMap.set(notif.user_id, []);
+                }
+                userMap.get(notif.user_id).push(notif)
+            })
+
+            //for each user send email
+            for (const [user_id, notifs] of userMap.entries()) {
+                const { data: email, error } = await supabase
+                    .from("profiles")
+                    .select("email")
+                    .eq("user_id", user_id)
+                    .maybeSingle()
+                
+                if (error) {
+                    console.error(`Error fetching email for ${user_id}:`, error.message)
+                }
+                const { data: prefs, error: prefError } = await supabase
+                    .from("user_preferences")
+                    .select("email_notifications")
+                    .eq("user_id", user_id)
+                    .maybeSingle()
+                
+                if (prefError) {
+                    console.error(`Preference fetch failed for ${user_id}:`, prefError)
+                }
+
+                if (prefs?.email_notifications) {
+                    try {
+                        await sendEmail({
+                            to: email,
+                            subject: "You have unread notifications!",
+                            text: `You have ${notifs.length} unread notifications. Log back in to check them out!`
+                        });
+
+                        console.log(`Email sent to user ${user_id} for unread notifs`)
+                    } catch (emailErr) {
+                        console.error(`Failed to send email to ${user_id}:`, emailErr)
+                    }
+                }
+            }
+
+        }
+        //call function
+        try {
+            await sendReminderForUnreadNotifs();
+            res.status(200).json({ success: true });
+        } catch (err) {
+            res.status(500).json({ error: "Failed to process unread check" })
+        }
+    })
     //add notif if opp hasnt been marked as complete
     return router
 }
