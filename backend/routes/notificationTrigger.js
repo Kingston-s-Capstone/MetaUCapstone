@@ -1,6 +1,7 @@
 const express = require("express")
 const { supabase } = require('../supabaseClient');
 const sendEmail = require('../utilities/sendEmail')
+const notificationService = require("../services/notificationsService")
 
 function createNotificationTriggerRoutes(emitToUser) {
     const router = express.Router()
@@ -28,7 +29,7 @@ function createNotificationTriggerRoutes(emitToUser) {
 
             if (error) throw error;
 
-            profiles.forEach((profile) => {
+            profiles.forEach(async (profile) => {
                 const profileText = changeToText(profile);
                 const profileSet = new Set(
                     profileText
@@ -50,6 +51,17 @@ function createNotificationTriggerRoutes(emitToUser) {
                         message: `New Internship matches your profile, check it out: ${title}`,
                         url: link
                     });
+                    try {
+                        await notificationService.create({
+                            user_id: profile.user_id,
+                            type:"internship",
+                            title: "A new internship match",
+                            message: `A new internship was added which matches your profile. Check out: ${title}`,
+                            url: link
+                    })
+                    } catch (err) {
+                        console.error("Error saving new internship notification", err)
+                    }
                 }
             });
             res.status(200). json({ success: true });
@@ -71,7 +83,7 @@ function createNotificationTriggerRoutes(emitToUser) {
 
             if (error) throw error;
 
-            profiles.forEach((profile) => {
+            profiles.forEach(async (profile) => {
                 const profileText = changeToText(profile);
                 const profileSet = new Set(
                     profileText
@@ -90,6 +102,19 @@ function createNotificationTriggerRoutes(emitToUser) {
                         message: `New Scholarship matches your profile, check it out: ${title}`,
                         url: link
                     });
+
+                    //save into notifications table
+                    try {
+                        await notificationService.create({
+                            user_id: profile.user_id,
+                            type:"",
+                            title: "A new scholarship match",
+                            message: `A new scholarship was added which matches your profile. Check out: ${title}`,
+                            url: link
+                    })
+                    } catch (err) {
+                        console.error("Error saving new scholarship notification", err)
+                    }
                 }
             })
             res.status(200).json({ success: true });
@@ -174,8 +199,23 @@ function createNotificationTriggerRoutes(emitToUser) {
                             message: `${type === "internship" ? "Internship" : "Scholarship"} due in ${
                                 days === 0 ? "today!" : `${days} day(s)`
                             }: ${title}`,
-                            url
+                            url: "http://localhost:5173/saved"
+
+                        
                         });
+
+                        //save into all notification table
+                        try {
+                            await notificationService.create({
+                                user_id: profile.user_id,
+                                type:"deadline",
+                                title: `Saved ${type}'s deadline approaching`,
+                                message: `Some of your saved ${type}'s deadline is approaching. Get to it `,
+                                url: link
+                            })
+                        } catch (err) {
+                        console.error("Error saving deadline notification", err)
+                        }
 
                         // Insert record to prevent duplicate
                         await supabase.from("sent_deadline_notifications").insert([
