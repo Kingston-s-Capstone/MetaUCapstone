@@ -47,10 +47,22 @@ function createNotificationTriggerRoutes(emitToUser) {
 
                 if (hasMatch) {
                     const link = url
+                    //in app push notif
                     emitToUser(profile.user_id, "new_notification", {
                         message: `New Internship matches your profile, check it out: ${title}`,
                         url: link
                     });
+                    //email notif if match
+                    await sendEmail({
+                        to: email,
+                        subject: "New Internship Match!",
+                        html: `
+                            <p>We've got some new internships for you!</p>
+                            <p>Some new internships were added to our system and we have new matches for you.</p>
+                            <p>Check out <a href=${link}>${title}</a> and other recommended internships</p>
+                            `
+                    });
+                    //save to notification table
                     try {
                         await notificationService.create({
                             user_id: profile.user_id,
@@ -62,7 +74,14 @@ function createNotificationTriggerRoutes(emitToUser) {
                     } catch (err) {
                         console.error("Error saving new internship notification", err)
                     }
-                }
+                } 
+                //for any new internships send push notif
+                const link = url
+                emitToUser(profile.user_id, "new_notification", {
+                    message: `New Internship were added. Check em out!`,
+                    url: link
+                });
+                
             });
             res.status(200). json({ success: true });
         } catch (err) {
@@ -102,6 +121,16 @@ function createNotificationTriggerRoutes(emitToUser) {
                         message: `New Scholarship matches your profile, check it out: ${title}`,
                         url: link
                     });
+                    //email notif if match
+                    await sendEmail({
+                        to: email,
+                        subject: "New Scholarship Match!",
+                        html: `
+                            <p>We've got a new scholarship for you!</p>
+                            <p>Some new internships were added to our system and we have a new match for you.</p>
+                            <p>Check out <a href=${link}>${title}</a> and other recommended scholarships</p>
+                            `
+                    });
 
                     //save into notifications table
                     try {
@@ -116,6 +145,12 @@ function createNotificationTriggerRoutes(emitToUser) {
                         console.error("Error saving new scholarship notification", err)
                     }
                 }
+                //for any new scholarships send push notif
+                const link = url
+                emitToUser(profile.user_id, "new_notification", {
+                    message: `New Scholarship were added. Check em out!`,
+                    url: link
+                });
             })
             res.status(200).json({ success: true });
         } catch (err) {
