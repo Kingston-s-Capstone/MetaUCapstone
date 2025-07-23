@@ -18,7 +18,7 @@ exports.getByUserId = async (user_id) => {
         .from("notifications")
         .select("*")
         .eq("user_id", user_id)
-        .order("created_at", { ascending: flase })
+        .order("created_at", { ascending: false })
     if (error) throw Error(error.message)
     return data
 };

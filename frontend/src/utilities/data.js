@@ -51,4 +51,12 @@ export const unsaveScholarship = (user_id, scholarship_id) => API.delete('/schol
 export const getSavedInternships = (user_id) => API.get(`/internships/saved/${user_id}`);
 export const getSavedScholarships = (user_id) => API.get(`/scholarships/saved/${user_id}`)
 
+
+//Notifications
+export const markNotificationAsRead = async (notificationId) => {
+    const res = await API.patch(`/notifications/${notificationId}/read`);
+    return res.data
+}
+export const getUserNotifications = () => API.get('/notifications')
+
 export default API

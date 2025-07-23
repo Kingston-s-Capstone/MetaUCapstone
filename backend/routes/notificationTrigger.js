@@ -16,6 +16,7 @@ function createNotificationTriggerRoutes(emitToUser) {
     }
 
     //internship route, match on title
+    //add email notif for profile match - in app for any
     router.post("/new-internship", async (req, res) => {
         const internship = req.body.new;
         const { title, url } = internship
@@ -286,6 +287,10 @@ function createNotificationTriggerRoutes(emitToUser) {
             res.status(500).json({ error: "Inactive check failed" })
         }
     })
+
+    //add email notif for unread notifs
+
+    //add notif if opp hasnt been marked as complete
     return router
 }
 module.exports = createNotificationTriggerRoutes;
