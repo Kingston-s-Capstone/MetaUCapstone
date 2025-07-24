@@ -43,6 +43,16 @@ function createNotificationTriggerRoutes(emitToUser) {
                         .split(/\s/)
                 );
 
+                const { data, error } = await supabase
+                    .from("profiles")
+                    .select("email")
+                    .eq("user_id", profile.user_id)
+                    .maybeSingle()
+                
+                if (error) {
+                    console.error(`Error fetching email for ${user_id}:`, error.message)
+                }
+                const email = data?.email
                 const hasMatch = [...profileSet].some((term) => titleSet.has(term));
 
                 if (hasMatch) {
