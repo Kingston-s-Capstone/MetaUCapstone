@@ -46,7 +46,7 @@ function createNotificationTriggerRoutes(emitToUser) {
         //computer cosine similarty
         const dotProduct = profileVector.reduce((sum, val, i) => sum + val * oppVector[i], 0);
         const magnitudeA = Math.sqrt(profileVector.reduce((sum, val) => sum + val * val, 0));
-        const magnitudeB = Math.sqrt(titleVector.reduce((sum, val) => sum + val, 0))
+        const magnitudeB = Math.sqrt(oppVector.reduce((sum, val) => sum + val, 0))
 
         //avoid dividing by 0
         if (magnitudeA === 0 || magnitudeB === 0) return 0;
@@ -59,6 +59,7 @@ function createNotificationTriggerRoutes(emitToUser) {
     router.post("/new-internship", async (req, res) => {
         const internship = req.body.new;
         const { title, url } = internship
+        const matchMap = new Map();
 
         try {
             const { data: profiles, error } = await supabase
@@ -70,58 +71,68 @@ function createNotificationTriggerRoutes(emitToUser) {
             profiles.forEach(async (profile) => {
                 const profileText = changeToText(profile);
                 
-                const { data, error } = await supabase
-                    .from("profiles")
-                    .select("email")
-                    .eq("user_id", profile.user_id)
-                    .maybeSingle()
-                
-                if (error) {
-                    console.error(`Error fetching email for ${user_id}:`, error.message)
-                }
-                const email = data?.email
                 //get tfidf score
                 const score = getTFIDFScore(profileText, title)
                 const hasMatch = score > 0.35;
 
+                //match met, add to batch
                 if (hasMatch) {
-                    const link = url
-                    //in app push notif
-                    emitToUser(profile.user_id, "new_notification", {
-                        message: `New Internship matches your profile, check it out: ${title}`,
-                        url: link
-                    });
-                    //email notif if match
-                    await sendEmail({
-                        to: email,
-                        subject: "New Internship Match!",
-                        html: `
-                            <p>We've got some new internships for you!</p>
-                            <p>Some new internships were added to our system and we have new matches for you.</p>
-                            <p>Check out <a href=${link}>${title}</a> and other recommended internships</p>
-                            `
-                    });
-                    //save to notification table
-                    try {
-                        await notificationService.create({
-                            user_id: profile.user_id,
-                            type:"internship",
-                            title: "A new internship match",
-                            message: `A new internship was added which matches your profile. Check out: ${title}`,
-                            url: link
+                    if (!matchMap.has(profile.user_id)) {
+                        matchMap.set(profile.user_id, [])
+                    }
+
+                    matchMap.get(profile.user_id).push({ title, link: url})
+                } 
+            });
+            
+            //after looping through all profiles, send one email + emit per match group
+            for (const profile of profiles) {
+                const matchedItems = profile._matchedItems;
+                if (!matchedItems || matchedItems.length === 0) continue;
+
+                const email = (
+                    await supabase
+                        .from("profiles")
+                        .select("email")
+                        .eq("user_id", profile.user_id)
+                        .maybeSingle()
+                ).data?.email;
+
+                const htmlBody = matchedItems
+                    .map((item) => `<p><a href="${item.link}">${item.title}</a></p>`)
+                    .join("")
+
+                await sendEmail({
+                    to: email,
+                    subject: "You have new internship matches!",
+                    html:`
+                    <p>We've found ${matchedItems.length} new internship(s) that match your profile:</p>
+                    ${htmlBody}
+                    `
+                });
+
+                //send a push notif
+                emitToUser(profile.user_id, "new_notifications", {
+                    message: `${matchedItems.length} new internship(s) match your profile.`,
+                    url: "http://localhost:5173/internshippage"
+                });
+
+                //save to notification table
+                try {
+                    await notificationService.create({
+                        user_id: profile.user_id,
+                        type:"internship",
+                        title: "New internship matches!",
+                        message: `
+                                    <p>We've found ${matchedItems.length} new internship(s) that match your profile:</p>
+                                    ${htmlBody}
+                                `,
+                        url: "http://localhost:5173/internshippage"
                     })
                     } catch (err) {
                         console.error("Error saving new internship notification", err)
                     }
-                } 
-                //for any new internships send push notif
-                const link = url
-                emitToUser(profile.user_id, "new_notification", {
-                    message: `New Internship were added. Check em out!`,
-                    url: link
-                });
-                
-            });
+            }
             res.status(200). json({ success: true });
         } catch (err) {
             console.error("Error in /new-internship:", err);
@@ -133,6 +144,7 @@ function createNotificationTriggerRoutes(emitToUser) {
     router.post("/new-scholarship", async (req, res) => {
         const scholarship = req.body.new;
         const { title, desciption, url } = scholarship;
+        const matchMap = new Map();
 
         try {
             const { data: profiles, error } = await supabase
@@ -148,43 +160,63 @@ function createNotificationTriggerRoutes(emitToUser) {
                 const score = getTFIDFScore(profileText, combinedText)
                 const hasMatch = score > 0.2 ;
 
+                //match met, add to batch
                 if (hasMatch) {
-                    const link = url
-                    emitToUser(profile.user_id, "new_notification", {
-                        message: `New Scholarship matches your profile, check it out: ${title}`,
-                        url: link
-                    });
-                    //email notif if match
-                    await sendEmail({
-                        to: email,
-                        subject: "New Scholarship Match!",
-                        html: `
-                            <p>We've got a new scholarship for you!</p>
-                            <p>Some new internships were added to our system and we have a new match for you.</p>
-                            <p>Check out <a href=${link}>${title}</a> and other recommended scholarships</p>
-                            `
-                    });
+                    if (!matchMap.has(profile.user_id)) {
+                        matchMap.set(profile.user_id, [])
+                    }
 
-                    //save into notifications table
-                    try {
-                        await notificationService.create({
-                            user_id: profile.user_id,
-                            type:"",
-                            title: "A new scholarship match",
-                            message: `A new scholarship was added which matches your profile. Check out: ${title}`,
-                            url: link
+                    matchMap.get(profile.user_id).push({ title, link: url})
+                } 
+            })
+            //after looping through all profiles, send one email + emit per match group
+            for (const profile of profiles) {
+                const matchedItems = profile._matchedItems;
+                if (!matchedItems || matchedItems.length === 0) continue;
+
+                const email = (
+                    await supabase
+                        .from("profiles")
+                        .select("email")
+                        .eq("user_id", profile.user_id)
+                        .maybeSingle()
+                ).data?.email;
+
+                const htmlBody = matchedItems
+                    .map((item) => `<p><a href="${item.link}">${item.title}</a></p>`)
+                    .join("")
+
+                await sendEmail({
+                    to: email,
+                    subject: "You have new scholarship matches!",
+                    html:`
+                    <p>We've found ${matchedItems.length} new scholarship(s) that match your profile:</p>
+                    ${htmlBody}
+                    `
+                });
+
+                //send a push notif
+                emitToUser(profile.user_id, "new_notifications", {
+                    message: `${matchedItems.length} new scholarship(s) match your profile.`,
+                    url: "http://localhost:5173/internshippage"
+                });
+
+                //save to notification table
+                try {
+                    await notificationService.create({
+                        user_id: profile.user_id,
+                        type:"scholarship",
+                        title: "New scholarship matches!",
+                        message: `
+                                    <p>We've found ${matchedItems.length} new scholarship(s) that match your profile:</p>
+                                    ${htmlBody}
+                                `,
+                        url: "http://localhost:5173/scholarshippage"
                     })
                     } catch (err) {
                         console.error("Error saving new scholarship notification", err)
                     }
-                }
-                //for any new scholarships send push notif
-                const link = url
-                emitToUser(profile.user_id, "new_notification", {
-                    message: `New Scholarship were added. Check em out!`,
-                    url: link
-                });
-            })
+            }
             res.status(200).json({ success: true });
         } catch (err) {
             console.error("Error in /new-scholarship:", err)
