@@ -40,6 +40,18 @@ function initializeCronJobs() {
             console.error("Unread notifs check error:", error.message)
         }
     })
+
+    //daily digest cron job
+    cron.schedule("0 12 * * *", async () => {
+        console.log("Running daily digest cron at 12pm")
+
+        try{
+            const response = await axios.post("http://localhost:4000/send-digest")
+            console.log("Digest sent:", response.data);
+        } catch (error) {
+            console.error("Error sending digest:", error.message)
+        }
+    })
 }
 
 module.exports = initializeCronJobs

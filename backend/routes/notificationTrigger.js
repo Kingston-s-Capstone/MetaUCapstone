@@ -230,8 +230,10 @@ function createNotificationTriggerRoutes(emitToUser) {
                         //skip if no deadlines
                         if (!deadline) continue;
 
-                        //standardize date comparison (ex. strip time if a timestamp)
+                        //get deadline
                         const deadlineDate = new Date(deadline);
+
+                        //Normalize dates
                         const normalizedDeadline = new Date(
                             deadlineDate.getFullYear(),
                             deadlineDate.getMonth(),
@@ -262,10 +264,14 @@ function createNotificationTriggerRoutes(emitToUser) {
                             continue;
                         }
 
-                        if (!sent) {
+                        if (sent) continue;
+
+                        const urgency = 1 / (days + 1)
+
+                        if (days <= 7) {
                         emitToUser(user_id, "new_notification", {
-                            message: `${type === "internship" ? "Internship" : "Scholarship"} due in ${
-                                days === 0 ? "today!" : `${days} day(s)`
+                            message: `${type === "internship" ? "Internship" : "Scholarship"} due ${
+                                days === 0 ? "today!" : `in ${days} day(s)`
                             }: ${title}`,
                             url: "http://localhost:5173/saved"
 
@@ -294,6 +300,18 @@ function createNotificationTriggerRoutes(emitToUser) {
                                 notification_type: label,
                             },
                         ]);
+                    } else {
+                        //store in digest batch
+                        await supabase.from("digest_deadline_notifications").insert([
+                            {
+                                user_id,
+                                opportunity_id,
+                                opportunity_type: type,
+                                title,
+                                deadline,
+                                urgency_score: urgency
+                            }
+                        ])
                     }
                 }
             } catch (err) {
@@ -322,7 +340,59 @@ function createNotificationTriggerRoutes(emitToUser) {
             console.error("Error in deadline trigger:", err);
             res.status(500).json({ error: "Deadline trigger failed" });
         }
-    })
+    });
+
+    //digest sending route
+    router.post("/send-digest", async (req, res) => {
+        try {
+            const { data: digestData, error } = await supabase
+                .from("digest_deadline_notifications")
+                .select("user_id, opportunity_id, opportunity_type, title, deadline")
+                .order("deadline", { ascending: true });
+            
+                if (error) throw error;
+
+                const grouped = {};
+                for (const row of digestData) {
+                    if (!grouped[row.user_id]) grouped[row.user_id] = [];
+                    grouped[row.user_id].push(row);
+                }
+
+                for (const [user_id, items] of Object.entries(grouped)) {
+                    const { data: emailData, error: emailError } = await supabase
+                        .from("profiles")
+                        .select("email")
+                        .eq("user_id", user_id)
+                        .maybeSingle();
+                    if (emailError || !emailData?.email) continue;
+
+                    const html = `
+                        <h3>Upcoming Deadlines</h3>
+                        <ul>
+                            ${items.map(
+                                (item) => `<li><strong>${item.opportunity_type}</strong>: ${item.title} - due by ${item.deadlines}</li>`
+                            )
+                            .join("")}
+                        </ul>
+                        <p>Check all saved opportunities <a href="http://localhost:5173/saved">here</a>.</p>
+                    `;
+
+                    await sendEmail({
+                        to: emailData.email,
+                        subject: "Upcoming Deadline Digest",
+                        html: html
+                    });
+                }
+
+                //clear digest table after sending
+                await supabase.from("digest_deadline_notifications").delete().neq("id", "")
+
+                res.status(200).json({ success: true });
+        } catch (err) {
+            console.error("/send-digest failed", err);
+            res.status(500).json({ error: "Digest sending failed" });
+        }
+    });
 
     router.post("/check-inactive-users", async (req, res) => {
 
