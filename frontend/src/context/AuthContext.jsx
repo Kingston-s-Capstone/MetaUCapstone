@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState, useContext } from "react";
 import { supabase } from "../SupaBaseClient";
 import socket from "../utilities/socket";
+import { toast } from "react-toastify";
 
 
 const AuthContext = createContext();
@@ -121,6 +122,12 @@ export const AuthContextProvider = ({ children }) => {
     useEffect(() => {
         socket.on("new_notification", (notification) => {
             console.log("New notification received:", notification)
+
+            toast.info(`New Notification: ${notification.message}`, {
+                onClick: () => {
+                    window.location.href = notification.url
+                }
+            })
         })
 
         return () => {

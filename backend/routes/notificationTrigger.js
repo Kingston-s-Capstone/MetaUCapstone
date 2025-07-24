@@ -1,6 +1,7 @@
 const express = require("express")
 const { supabase } = require('../supabaseClient');
 const sendEmail = require('../utilities/sendEmail')
+const notificationService = require("../services/notificationsService")
 
 function createNotificationTriggerRoutes(emitToUser) {
     const router = express.Router()
@@ -28,7 +29,7 @@ function createNotificationTriggerRoutes(emitToUser) {
 
             if (error) throw error;
 
-            profiles.forEach((profile) => {
+            profiles.forEach(async (profile) => {
                 const profileText = changeToText(profile);
                 const profileSet = new Set(
                     profileText
@@ -42,15 +43,55 @@ function createNotificationTriggerRoutes(emitToUser) {
                         .split(/\s/)
                 );
 
+                const { data, error } = await supabase
+                    .from("profiles")
+                    .select("email")
+                    .eq("user_id", profile.user_id)
+                    .maybeSingle()
+                
+                if (error) {
+                    console.error(`Error fetching email for ${user_id}:`, error.message)
+                }
+                const email = data?.email
                 const hasMatch = [...profileSet].some((term) => titleSet.has(term));
 
                 if (hasMatch) {
                     const link = url
+                    //in app push notif
                     emitToUser(profile.user_id, "new_notification", {
                         message: `New Internship matches your profile, check it out: ${title}`,
                         url: link
                     });
-                }
+                    //email notif if match
+                    await sendEmail({
+                        to: email,
+                        subject: "New Internship Match!",
+                        html: `
+                            <p>We've got some new internships for you!</p>
+                            <p>Some new internships were added to our system and we have new matches for you.</p>
+                            <p>Check out <a href=${link}>${title}</a> and other recommended internships</p>
+                            `
+                    });
+                    //save to notification table
+                    try {
+                        await notificationService.create({
+                            user_id: profile.user_id,
+                            type:"internship",
+                            title: "A new internship match",
+                            message: `A new internship was added which matches your profile. Check out: ${title}`,
+                            url: link
+                    })
+                    } catch (err) {
+                        console.error("Error saving new internship notification", err)
+                    }
+                } 
+                //for any new internships send push notif
+                const link = url
+                emitToUser(profile.user_id, "new_notification", {
+                    message: `New Internship were added. Check em out!`,
+                    url: link
+                });
+                
             });
             res.status(200). json({ success: true });
         } catch (err) {
@@ -71,7 +112,7 @@ function createNotificationTriggerRoutes(emitToUser) {
 
             if (error) throw error;
 
-            profiles.forEach((profile) => {
+            profiles.forEach(async (profile) => {
                 const profileText = changeToText(profile);
                 const profileSet = new Set(
                     profileText
@@ -90,7 +131,36 @@ function createNotificationTriggerRoutes(emitToUser) {
                         message: `New Scholarship matches your profile, check it out: ${title}`,
                         url: link
                     });
+                    //email notif if match
+                    await sendEmail({
+                        to: email,
+                        subject: "New Scholarship Match!",
+                        html: `
+                            <p>We've got a new scholarship for you!</p>
+                            <p>Some new internships were added to our system and we have a new match for you.</p>
+                            <p>Check out <a href=${link}>${title}</a> and other recommended scholarships</p>
+                            `
+                    });
+
+                    //save into notifications table
+                    try {
+                        await notificationService.create({
+                            user_id: profile.user_id,
+                            type:"",
+                            title: "A new scholarship match",
+                            message: `A new scholarship was added which matches your profile. Check out: ${title}`,
+                            url: link
+                    })
+                    } catch (err) {
+                        console.error("Error saving new scholarship notification", err)
+                    }
                 }
+                //for any new scholarships send push notif
+                const link = url
+                emitToUser(profile.user_id, "new_notification", {
+                    message: `New Scholarship were added. Check em out!`,
+                    url: link
+                });
             })
             res.status(200).json({ success: true });
         } catch (err) {
@@ -174,8 +244,23 @@ function createNotificationTriggerRoutes(emitToUser) {
                             message: `${type === "internship" ? "Internship" : "Scholarship"} due in ${
                                 days === 0 ? "today!" : `${days} day(s)`
                             }: ${title}`,
-                            url
+                            url: "http://localhost:5173/saved"
+
+                        
                         });
+
+                        //save into all notification table
+                        try {
+                            await notificationService.create({
+                                user_id: profile.user_id,
+                                type:"deadline",
+                                title: `Saved ${type}'s deadline approaching`,
+                                message: `Some of your saved ${type}'s deadline is approaching. Get to it `,
+                                url: link
+                            })
+                        } catch (err) {
+                        console.error("Error saving deadline notification", err)
+                        }
 
                         // Insert record to prevent duplicate
                         await supabase.from("sent_deadline_notifications").insert([
@@ -289,7 +374,77 @@ function createNotificationTriggerRoutes(emitToUser) {
     })
 
     //add email notif for unread notifs
+    router.post("/check-unread", async (req, res) => {
+        const sendReminderForUnreadNotifs = async () => {
+            const oneWeekAgo = new Date()
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
+            //get all unread notifs older than 7 days
+            const { data: unreadNotifs, error } = await supabase
+                .from("notifications")
+                .select("id, user_id, title, created_at")
+                .eq("status", "unread")
+                .lt("created_at", oneWeekAgo.toISOString())
+
+            if (error) {
+                console.error("Error fetching old unread notifications:", error.message)
+                return
+            }
+
+            //group by user
+            const userMap = new Map();
+            unreadNotifs.forEach((notif) => {
+                if (!userMap.has(notif.user_id)) {
+                    userMap.set(notif.user_id, []);
+                }
+                userMap.get(notif.user_id).push(notif)
+            })
+
+            //for each user send email
+            for (const [user_id, notifs] of userMap.entries()) {
+                const { data: email, error } = await supabase
+                    .from("profiles")
+                    .select("email")
+                    .eq("user_id", user_id)
+                    .maybeSingle()
+                
+                if (error) {
+                    console.error(`Error fetching email for ${user_id}:`, error.message)
+                }
+                const { data: prefs, error: prefError } = await supabase
+                    .from("user_preferences")
+                    .select("email_notifications")
+                    .eq("user_id", user_id)
+                    .maybeSingle()
+                
+                if (prefError) {
+                    console.error(`Preference fetch failed for ${user_id}:`, prefError)
+                }
+
+                if (prefs?.email_notifications) {
+                    try {
+                        await sendEmail({
+                            to: email,
+                            subject: "You have unread notifications!",
+                            text: `You have ${notifs.length} unread notifications. Log back in to check them out!`
+                        });
+
+                        console.log(`Email sent to user ${user_id} for unread notifs`)
+                    } catch (emailErr) {
+                        console.error(`Failed to send email to ${user_id}:`, emailErr)
+                    }
+                }
+            }
+
+        }
+        //call function
+        try {
+            await sendReminderForUnreadNotifs();
+            res.status(200).json({ success: true });
+        } catch (err) {
+            res.status(500).json({ error: "Failed to process unread check" })
+        }
+    })
     //add notif if opp hasnt been marked as complete
     return router
 }

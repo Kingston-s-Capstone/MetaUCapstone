@@ -30,6 +30,16 @@ function initializeCronJobs() {
             console.error("Inactive user check failed", error.response?.data || error.message)
         }
     })
+
+    cron.schedule("0 11 * * * ", async () => {
+        console.log("Running unread notifs check");
+        try {
+            const response = axios.post("http://localhost:4000/check-unread")
+            console.log("Unread notifs check response:", response.data)
+        } catch (error) {
+            console.error("Unread notifs check error:", error.message)
+        }
+    })
 }
 
 module.exports = initializeCronJobs
