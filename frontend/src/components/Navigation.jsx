@@ -10,6 +10,7 @@ import NotificationModal from './NotificationModal'
 const Navigation = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [notifications, setNotifications] = useState([])
+    const [unreadCount, setUnreadCount] = useState(0)
     const navigate = useNavigate();
     const { signOut } = UserAuth()
 
@@ -35,8 +36,12 @@ const Navigation = () => {
             };
             fetchNotifications();
         }, [])
-
-    const unreadCount = notifications.filter(n => n.status !== "read").length
+    
+    useEffect(() => {
+        const count = notifications.filter(n => n.status === "unread").length
+        setUnreadCount(count)
+    }, [notifications])
+    
 
     return (
         <>
