@@ -2,11 +2,13 @@ const express = require("express")
 const { supabase } = require('../supabaseClient');
 const sendEmail = require('../utilities/sendEmail')
 const notificationService = require("../services/notificationsService")
+const natural = require("natural");
+const TfIdf = natural.TfIdf;
 
 function createNotificationTriggerRoutes(emitToUser) {
     const router = express.Router()
 
-    //Weighted helper function
+    //change to text helper function
     const changeToText = (profile) => {
         return (
             ((profile.career_interests || "") + " ") +
@@ -16,8 +18,44 @@ function createNotificationTriggerRoutes(emitToUser) {
         ).toLowerCase();
     }
 
+    //TFIDF helper function
+    const getTFIDFScore = (profileText, opportunityText) => {
+        const tfidf = new TfIdf();
+
+        // add the two documents: index 0 = profile, index 1 = opportunity
+        tfidf.addDocument(profileText);
+        tfidf.addDocument(opportunityText);
+
+        const profileVector = [];
+        const oppVector = [];
+
+        const allTerms = new Set();
+
+        //// get all terms from both profile and opportunity
+        tfidf.listTerms(0).forEach(item => allTerms.add(item.term));
+        tfidf.listTerms(1).forEach(item => allTerms.add(item.term));
+
+        //buid tfidf vectors using same term order
+        allTerms.forEach(term => {
+            const pScore = tfidf.tfidf(term, 0);
+            const oScore = tfidf.tfidf(term, 1);
+            profileVector.push(pScore);
+            oppVector.push(oScore);
+        });
+
+        //computer cosine similarty
+        const dotProduct = profileVector.reduce((sum, val, i) => sum + val * oppVector[i], 0);
+        const magnitudeA = Math.sqrt(profileVector.reduce((sum, val) => sum + val * val, 0));
+        const magnitudeB = Math.sqrt(titleVector.reduce((sum, val) => sum + val, 0))
+
+        //avoid dividing by 0
+        if (magnitudeA === 0 || magnitudeB === 0) return 0;
+
+        //return cosine similarity score from 0 to 1
+        return dotProduct / (magnitudeA * magnitudeB)
+    }
+
     //internship route, match on title
-    //add email notif for profile match - in app for any
     router.post("/new-internship", async (req, res) => {
         const internship = req.body.new;
         const { title, url } = internship
@@ -31,18 +69,7 @@ function createNotificationTriggerRoutes(emitToUser) {
 
             profiles.forEach(async (profile) => {
                 const profileText = changeToText(profile);
-                const profileSet = new Set(
-                    profileText
-                        .split(/\s+/)
-                        .map((word) => word.toLowerCase())
-                );
-
-                const titleSet = new Set(
-                    (title || "")
-                        .toLowerCase()
-                        .split(/\s/)
-                );
-
+                
                 const { data, error } = await supabase
                     .from("profiles")
                     .select("email")
@@ -53,7 +80,9 @@ function createNotificationTriggerRoutes(emitToUser) {
                     console.error(`Error fetching email for ${user_id}:`, error.message)
                 }
                 const email = data?.email
-                const hasMatch = [...profileSet].some((term) => titleSet.has(term));
+                //get tfidf score
+                const score = getTFIDFScore(profileText, title)
+                const hasMatch = score > 0.35;
 
                 if (hasMatch) {
                     const link = url
@@ -114,16 +143,10 @@ function createNotificationTriggerRoutes(emitToUser) {
 
             profiles.forEach(async (profile) => {
                 const profileText = changeToText(profile);
-                const profileSet = new Set(
-                    profileText
-                        .split(/\s+/)
-                        .map((word) => word.toLowerCase())
-                );
-
                 const combinedText = `${title || ""} ${desciption || ""}`.toLowerCase();
-                const combinedSet = new Set(combinedText.split(/\s+/))
-
-                const hasMatch = [...profileSet].some((word) => combinedSet.has(term));
+                
+                const score = getTFIDFScore(profileText, combinedText)
+                const hasMatch = score > 0.2 ;
 
                 if (hasMatch) {
                     const link = url
