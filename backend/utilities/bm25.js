@@ -1,5 +1,5 @@
 //tokenize text into lowercase alphanumerical words
-function tokenize(text) {
+const tokenize = (text) => {
     return text 
         .toLowerCase()
         .replace(/[^a-z0-9\s]/g, "")
@@ -7,14 +7,14 @@ function tokenize(text) {
         .filter(Boolean)
 }
 //convert document into BM25 ready format with meta data
-export function prepareDocument(text, meta = {}) {
+const prepareDocument = (text, meta = {}) => {
     return {
         tokens: tokenize(text),
         ...meta
     }
 }
 //BM25 scoring function
-export function computeBM25(queryTokens, documents, {k1 = 1.5, b = 0.75 } = {}) {
+const computeBM25 = (queryTokens, documents, {k1 = 1.5, b = 0.75 } = {}) => {
     const N = documents.length; //total number of docs
     const avgdl = documents.reduce((sum, doc) => sum + doc.tokens.length, 0) / N //average length of docs
 
@@ -50,10 +50,12 @@ export function computeBM25(queryTokens, documents, {k1 = 1.5, b = 0.75 } = {}) 
 
                 const f = freq[term];
                 const idfTerm = idf[term] || 0;
-                score += idfTerm * ((f * (k1 + 1)) / (f + k1 * (1 - b + b * (dl / avgdl))));
+                score += idfTerm * ((f * (k1 + 1)) / (f + k1 * (1 - b + b * (dl / avgdl)))) || 0;
             }
 
             return { ...doc, score } //return orignal doc metadata + score
         }
     )
 }
+
+module.exports = { prepareDocument, computeBM25 }
