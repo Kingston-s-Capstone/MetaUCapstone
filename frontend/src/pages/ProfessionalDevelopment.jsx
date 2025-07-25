@@ -3,6 +3,8 @@ import SearchForm from "../components/SearchForm";
 import "./Opportunities.css"
 import { supabase } from "../SupaBaseClient"
 import ProfDevCard from "../components/ProfDevelopmentCard";
+import { toast } from "react-toastify"
+import AddOpportunityModal from "../components/AddOpportunityModal";
 
 const ProfessionalDevelopment = () => {
     const [opportunities, setOpportunities] = useState([])
@@ -10,6 +12,7 @@ const ProfessionalDevelopment = () => {
     const [loading, setLoading] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
     const [hasMore, setHasMore] = useState(true)
+    const [showModal, setShowModal] = useState(false)
 
     const fetchOpportunities = async (reset = false, customSearch = searchQuery) => {
         setLoading(true);
@@ -23,7 +26,6 @@ const ProfessionalDevelopment = () => {
                 .select("*")
                 .range(from, to);
 
-            console.log("query",query)
             // Apply search if present
             if (customSearch.trim()) {
                 query = query.ilike("title", `%${customSearch.toLowerCase()}%`)
@@ -56,6 +58,24 @@ const ProfessionalDevelopment = () => {
         fetchOpportunities(true)
     }, [searchQuery])
 
+    const handleAdd = async (formData, type) => {
+        const payload = {
+            title: formData.title,
+            organization: formData.organization,
+            url: formData.url,
+            description: formData.description,
+            date: new Date(formData.date),
+            deadline: new Date(formData.deadline).toISOString().split("T")[0],
+        };
+
+        //insert to supabase
+        const { data, error } = await supabase.from("professional_development").insert(payload)
+        if (error) console.error("Insert error:", error);
+        else toast.info(
+            "Professional Development added"
+        )
+    }
+
     return (
         <div className="page">
             <header className="pageHeader">
@@ -76,7 +96,7 @@ const ProfessionalDevelopment = () => {
                             />
                         </div>
                         <div className="addNew">
-                            <button className="addButton">Add New</button>
+                            <button className="addButton" onClick={() => setShowModal(true)}>Add New</button>
                         </div>
                     </div>
                     
@@ -94,6 +114,12 @@ const ProfessionalDevelopment = () => {
                     </div>
                 )}
             </main>
+            <AddOpportunityModal
+                type="professional development"
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                onSubmit={handleAdd}
+            />
         </div>
     )
 }

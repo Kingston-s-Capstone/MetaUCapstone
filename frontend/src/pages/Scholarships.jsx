@@ -4,6 +4,8 @@ import { supabase } from "../SupaBaseClient"
 import { useState, useEffect } from "react"
 import { getRecommendations } from "../utilities/data"
 import ScholarshipCard from "../components/ScholarshipCard"
+import AddOpportunityModal from "../components/AddOpportunityModal"
+import { toast } from "react-toastify"
 
 
 const Scholarships = () => {
@@ -14,6 +16,7 @@ const Scholarships = () => {
     const [searchQuery, setSearchQuery] = useState("")
     const [hasMore, setHasMore] = useState(true)
     const [currentUser, setCurrentUser] = useState(null)
+    const [showModal, setShowModal] = useState(false)
 
     const pageSize = 15
 
@@ -142,6 +145,24 @@ const Scholarships = () => {
         }
     }, [sortBy, searchQuery])
 
+    const handleAdd = async (formData, type) => {
+        const payload = {
+            title: formData.title,
+            organization: formData.organization,
+            url: formData.url,
+            description: formData.description,
+            deadline: new Date(formData.deadline).toISOString().split("T")[0],
+            amount: Number(formData.amount || 0),
+        };
+
+        //insert to supabase
+        const { data, error } = await supabase.from("scholarships").insert(payload)
+        if (error) console.error("Insert error:", error.message, error.details, error.hint);
+        else toast.info(
+            "Scholarship added"
+        )
+    }
+
     return (
         <div className="page">
             <header className="pageHeader">
@@ -178,7 +199,7 @@ const Scholarships = () => {
                             />
                         </div>
                         <div className="addNew">
-                            <button className="addButton">Add New</button>
+                            <button className="addButton" onClick={() => setShowModal(true)}>Add New</button>
                         </div>
                     </div>
                     
@@ -196,6 +217,12 @@ const Scholarships = () => {
                     </div>
                 )}
             </main>
+            <AddOpportunityModal
+                type="scholarship"
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                onSubmit={handleAdd}
+            />
         </div>
     )
 }
