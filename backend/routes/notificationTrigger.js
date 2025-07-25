@@ -36,7 +36,6 @@ function createNotificationTriggerRoutes(emitToUser) {
 
             profiles.forEach(async (profile) => {
                 const queryTokens = changeToText(profile);
-                console.log("profile", profile.user_id)
                 
                 //get BM25 score
                 const [scored] = computeBM25(queryTokens, documents)
@@ -354,7 +353,7 @@ function createNotificationTriggerRoutes(emitToUser) {
             const { data: digestData, error } = await supabase
                 .from("digest_deadline_notifications")
                 .select("user_id, opportunity_id, opportunity_type, title, deadline")
-                .order("deadline", { ascending: true });
+                .order("urgency", { ascending: false });
             
                 if (error) throw error;
 
