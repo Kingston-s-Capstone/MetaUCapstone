@@ -8,6 +8,7 @@ import Navigation from './components/Navigation';
 import Internships from './pages/Internships';
 import Scholarships from './pages/Scholarships';
 import SavedOpportunities from './pages/Saved';
+import ProfessionalDevelopment from './pages/ProfessionalDevelopment';
 
 export const router = createBrowserRouter([
     {  path: "/", element: <Signup /> },
@@ -41,6 +42,12 @@ export const router = createBrowserRouter([
         ),
         children: [
             { path: "/saved", element: <SavedOpportunities /> }
+        ]
+    },
+    { path: "/professional-development", element: ( <PrivateRoute><Navigation /></PrivateRoute>
+        ),
+        children: [
+            { path: "/professional-development", element: <ProfessionalDevelopment /> }
         ]
     },
 ])
