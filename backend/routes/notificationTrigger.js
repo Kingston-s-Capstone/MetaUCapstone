@@ -2,8 +2,7 @@ const express = require("express")
 const { supabase } = require('../supabaseClient');
 const sendEmail = require('../utilities/sendEmail')
 const notificationService = require("../services/notificationsService")
-const natural = require("natural");
-const TfIdf = natural.TfIdf;
+const { computeBM25, prepareDocument } = require("../utilities/bm25");
 
 function createNotificationTriggerRoutes(emitToUser) {
     const router = express.Router()
@@ -15,44 +14,8 @@ function createNotificationTriggerRoutes(emitToUser) {
             ((profile.major || "") + " ") +
             ((profile.classification || "") + " ") +
             ((profile.location_preferences || "") + " ")
-        ).toLowerCase();
-    }
-
-    //TFIDF helper function
-    const getTFIDFScore = (profileText, opportunityText) => {
-        const tfidf = new TfIdf();
-
-        // add the two documents: index 0 = profile, index 1 = opportunity
-        tfidf.addDocument(profileText);
-        tfidf.addDocument(opportunityText);
-
-        const profileVector = [];
-        const oppVector = [];
-
-        const allTerms = new Set();
-
-        //// get all terms from both profile and opportunity
-        tfidf.listTerms(0).forEach(item => allTerms.add(item.term));
-        tfidf.listTerms(1).forEach(item => allTerms.add(item.term));
-
-        //buid tfidf vectors using same term order
-        allTerms.forEach(term => {
-            const pScore = tfidf.tfidf(term, 0);
-            const oScore = tfidf.tfidf(term, 1);
-            profileVector.push(pScore);
-            oppVector.push(oScore);
-        });
-
-        //computer cosine similarty
-        const dotProduct = profileVector.reduce((sum, val, i) => sum + val * oppVector[i], 0);
-        const magnitudeA = Math.sqrt(profileVector.reduce((sum, val) => sum + val * val, 0));
-        const magnitudeB = Math.sqrt(oppVector.reduce((sum, val) => sum + val, 0))
-
-        //avoid dividing by 0
-        if (magnitudeA === 0 || magnitudeB === 0) return 0;
-
-        //return cosine similarity score from 0 to 1
-        return dotProduct / (magnitudeA * magnitudeB)
+        ).toLowerCase()
+        .split(/\s+/);
     }
 
     //internship route, match on title
@@ -60,6 +23,9 @@ function createNotificationTriggerRoutes(emitToUser) {
         const internship = req.body.new;
         const { title, url } = internship
         const matchMap = new Map();
+
+        const opportunityText = `${title}`;
+        const documents = [prepareDocument(opportunityText, { title, url })]
 
         try {
             const { data: profiles, error } = await supabase
@@ -69,11 +35,12 @@ function createNotificationTriggerRoutes(emitToUser) {
             if (error) throw error;
 
             profiles.forEach(async (profile) => {
-                const profileText = changeToText(profile);
+                const queryTokens = changeToText(profile);
+                console.log("profile", profile.user_id)
                 
-                //get tfidf score
-                const score = getTFIDFScore(profileText, title)
-                const hasMatch = score > 0.35;
+                //get BM25 score
+                const [scored] = computeBM25(queryTokens, documents)
+                const hasMatch = scored.score > .20;
 
                 //match met, add to batch
                 if (hasMatch) {
@@ -87,6 +54,8 @@ function createNotificationTriggerRoutes(emitToUser) {
             
             //after looping through all profiles, send one email + emit per match group
             for (const profile of profiles) {
+                const matched = matchMap.get(profile.user_id) || []
+                profile._matchedItems = matched
                 const matchedItems = profile._matchedItems;
                 if (!matchedItems || matchedItems.length === 0) continue;
 
@@ -110,9 +79,9 @@ function createNotificationTriggerRoutes(emitToUser) {
                     ${htmlBody}
                     `
                 });
-
+                console.log("profle emit:", profile.user_id)
                 //send a push notif
-                emitToUser(profile.user_id, "new_notifications", {
+                emitToUser(profile.user_id, "new_notification", {
                     message: `${matchedItems.length} new internship(s) match your profile.`,
                     url: "http://localhost:5173/internshippage"
                 });
@@ -143,8 +112,11 @@ function createNotificationTriggerRoutes(emitToUser) {
     //scholarship route, match on title and description
     router.post("/new-scholarship", async (req, res) => {
         const scholarship = req.body.new;
-        const { title, desciption, url } = scholarship;
+        const { title, desciption, url, eligibility } = scholarship;
         const matchMap = new Map();
+
+        const opportunityText = `${title} ${desciption} ${eligibility}`;
+        const documents = [prepareDocument(opportunityText, { text, url, desciption, eligibility })]
 
         try {
             const { data: profiles, error } = await supabase
@@ -154,11 +126,11 @@ function createNotificationTriggerRoutes(emitToUser) {
             if (error) throw error;
 
             profiles.forEach(async (profile) => {
-                const profileText = changeToText(profile);
-                const combinedText = `${title || ""} ${desciption || ""}`.toLowerCase();
+                const queryTokens = changeToText(profile);
                 
-                const score = getTFIDFScore(profileText, combinedText)
-                const hasMatch = score > 0.2 ;
+                //get BM25 score
+                const [scored] = computeBM25(queryTokens, documents)
+                const hasMatch = scored.score > 0.2;
 
                 //match met, add to batch
                 if (hasMatch) {
@@ -171,6 +143,8 @@ function createNotificationTriggerRoutes(emitToUser) {
             })
             //after looping through all profiles, send one email + emit per match group
             for (const profile of profiles) {
+                const matched = matchMap.get(profile.user_id) || []
+                profile._matchedItems = matched
                 const matchedItems = profile._matchedItems;
                 if (!matchedItems || matchedItems.length === 0) continue;
 
@@ -196,7 +170,7 @@ function createNotificationTriggerRoutes(emitToUser) {
                 });
 
                 //send a push notif
-                emitToUser(profile.user_id, "new_notifications", {
+                emitToUser(profile.user_id, "new_notification", {
                     message: `${matchedItems.length} new scholarship(s) match your profile.`,
                     url: "http://localhost:5173/internshippage"
                 });
