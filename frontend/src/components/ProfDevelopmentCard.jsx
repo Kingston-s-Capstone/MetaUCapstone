@@ -1,11 +1,11 @@
 
 const ProfDevCard = ({ opp }) => {
-    console.log(opp)
+    
     return (
         <div className="opportunity">
                     <div className="opportunityContent">
                         <a href={opp.url} target="_blank" rel="noreffer">{opp.title}</a>
-                        <span>{opp.date}</span>
+                        <span><strong>{opp.organization}</strong> | {new Date(opp.date).toLocaleDateString("en-US")}</span>
                         <span><strong>Description:</strong>{opp.description}</span>
                     </div>
                 </div>
