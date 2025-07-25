@@ -4,7 +4,7 @@ import { saveInternship, getSavedInternships, unsaveInternship } from "../utilit
 
 const InternshipCard = ({ intern, userId, handleRemove}) => {
     const [saved, setSaved] = useState(false)
-    
+
     useEffect(() => {
         const checkIfSaved = async() => {
             try {

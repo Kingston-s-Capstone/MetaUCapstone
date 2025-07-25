@@ -207,7 +207,7 @@ const Internships = () => {
                 </div>
                 <div className="opportunitiesList">
                     {internships.map((intern) => (
-                        <InternshipCard key={intern.id} intern={intern} userId={currentUser}/>
+                        <InternshipCard key={intern.id} intern={intern} userId={currentUser.user_id}/>
                     ))}
                 </div>
 

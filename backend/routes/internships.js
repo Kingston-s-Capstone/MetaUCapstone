@@ -145,7 +145,8 @@ router.get('/saved/:user_id', async (req, res) => {
 
     const { data, error } = await supabase
         .from('saved_internships')
-        .select('*, internships(*)');
+        .select('*, internships(*)')
+        .eq("user_id", user_id);
 
     if (error) return res.status(500).json({ error: error.message });
     res.json(data)
