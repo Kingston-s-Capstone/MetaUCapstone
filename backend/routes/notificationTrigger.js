@@ -78,7 +78,6 @@ function createNotificationTriggerRoutes(emitToUser) {
                     ${htmlBody}
                     `
                 });
-                console.log("profle emit:", profile.user_id)
                 //send a push notif
                 emitToUser(profile.user_id, "new_notification", {
                     message: `${matchedItems.length} new internship(s) match your profile.`,
@@ -457,8 +456,6 @@ function createNotificationTriggerRoutes(emitToUser) {
                         date_sent: Date(now)
                     }
                 ]);
-
-                console.log(`Inactive reminder email send to ${email}`);
             }
         }
 

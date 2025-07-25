@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 const InternshipBoard = () => {
     const [internships, setInternships] = useState([])
     const [careerInterest, setCareerInterest ] = useState('')
+    const limit = 3
 
     // Get internships that match career interest using career interest as key words
     useEffect(() => {
@@ -44,7 +45,7 @@ const InternshipBoard = () => {
                     .from("internships")
                     .select("*")
                     .ilike("title", `%${firstKeyword}%`)
-                    .limit(3);
+                    .limit(limit);
 
                 if (primaryError) throw primaryError;
 
@@ -57,7 +58,7 @@ const InternshipBoard = () => {
                     .from("internships")
                     .select("*")
                     .or(filter)
-                    .limit(2);
+                    .limit(limit);
 
                 if (secondaryError) throw secondaryError;
 
