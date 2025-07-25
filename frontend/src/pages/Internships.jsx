@@ -3,8 +3,9 @@ import "./Opportunities.css"
 import { supabase } from "../SupaBaseClient"
 import { useState, useEffect } from "react"
 import { getRecommendations } from "../utilities/data"
-import ScholarshipCard from "../components/ScholarshipCard"
 import InternshipCard from "../components/InternshipCard"
+import { toast } from "react-toastify"
+import AddOpportunityModal from "../components/AddOpportunityModal"
 
 const Internships = () => {
     const [internships, setInternships] = useState([])
@@ -14,6 +15,7 @@ const Internships = () => {
     const [searchQuery, setSearchQuery] = useState("")
     const [hasMore, setHasMore] = useState(true)
     const [currentUser, setCurrentUser] = useState(null)
+    const [showModal, setShowModal] = useState(false)
 
     const pageSize = 15
 
@@ -144,6 +146,24 @@ const Internships = () => {
         }
     }, [sortBy, searchQuery])
 
+    const handleAdd = async (formData, type) => {
+        const payload = {
+            ...formData,
+            date_validthrough: new Date(formData.deadline)
+        }
+
+        delete payload.deadline
+        delete payload.amount
+        delete payload.date
+
+        //insert to supabase
+        const { data, error } = await supabase.from("internships").insert(payload)
+        if (error) console.error("Insert error:", error);
+        else toast.info(
+            "Internship added"
+        )
+    }
+
     return (
         <div className="page">
             <header className="pageHeader">
@@ -180,14 +200,14 @@ const Internships = () => {
                             />
                         </div>
                         <div className="addNew">
-                            <button className="addButton">Add New</button>
+                            <button className="addButton" onClick={() => setShowModal(true)}>Add New</button>
                         </div>
                     </div>
                     
                 </div>
                 <div className="opportunitiesList">
                     {internships.map((intern) => (
-                        <InternshipCard key={intern.id} intern={intern} userId={currentUser}/>
+                        <InternshipCard key={intern.id} intern={intern} userId={currentUser.user_id}/>
                     ))}
                 </div>
 
@@ -197,6 +217,12 @@ const Internships = () => {
                     </div>
                 )}
             </main>
+            <AddOpportunityModal
+                type="internship"
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                onSubmit={handleAdd}
+            />
         </div>
     )
 }

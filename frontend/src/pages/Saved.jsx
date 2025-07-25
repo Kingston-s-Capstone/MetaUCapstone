@@ -16,7 +16,7 @@ const SavedOpportunities = () => {
     useEffect(() => {
         const fetchUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            setCurrentUser(user);
+            setCurrentUser(user.id);
         }
         fetchUser();
     }, []);
@@ -27,8 +27,8 @@ const SavedOpportunities = () => {
             if (!currentUser) return;
 
             const [savedInternships, savedScholarships, allInternships, allScholarships] = await Promise.all([
-                getSavedInternships(currentUser.id),
-                getSavedScholarships(currentUser.id),
+                getSavedInternships(currentUser),
+                getSavedScholarships(currentUser),
                 getInternships(),
                 getScholarships()
             ]);

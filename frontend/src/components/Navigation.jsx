@@ -29,7 +29,6 @@ const Navigation = () => {
                 try {
                     const res = await getUserNotifications();
                     setNotifications(res.data)
-                    console.log(notifications)
                 } catch (err) {
                     console.error("Failed to fetch notifications:", err)
                 } 
@@ -54,6 +53,7 @@ const Navigation = () => {
                     <li><Link to="/saved">Saved</Link></li>
                     <li><Link to="/internshippage">Internships</Link></li>
                     <li><Link to='/scholarshippage'>Scholarships</Link></li>
+                    <li><Link to="/professional-development">Professional Development</Link></li>
                     <li><Link to="/profilepage">Profile</Link></li>
                     <li><p onClick={handleSignOut} className='signOut'>Sign Out</p></li>
                 </ul>

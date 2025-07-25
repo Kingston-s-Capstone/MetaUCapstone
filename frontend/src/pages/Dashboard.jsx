@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getProfile } from "../utilities/data";
 import "../pages/Dashboard.css"
-import PinnedBoard from "../components/PinnedBoard";
+import PinnedBoard from "../components/SavedBoard";
 import InternshipBoard from "../components/InternshipsBoard";
 import ScholarshipsBoard from "../components/ScholarshipsBoard";
 import ProfessionalBoard from "../components/ProfessionalBoard";
