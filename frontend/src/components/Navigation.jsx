@@ -29,7 +29,6 @@ const Navigation = () => {
                 try {
                     const res = await getUserNotifications();
                     setNotifications(res.data)
-                    console.log(notifications)
                 } catch (err) {
                     console.error("Failed to fetch notifications:", err)
                 } 

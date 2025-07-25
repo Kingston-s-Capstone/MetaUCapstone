@@ -16,7 +16,7 @@ const SavedOpportunities = () => {
     useEffect(() => {
         const fetchUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            setCurrentUser(user);
+            setCurrentUser(user.id);
         }
         fetchUser();
     }, []);
