@@ -59,4 +59,15 @@ export const markNotificationAsRead = async (notificationId) => {
 }
 export const getUserNotifications = () => API.get('/notifications')
 
+//Chatbot
+export const sendChatMessage = async (message) => {
+    try {
+        const res = await API.post("/chatbot", { message });
+        return res.data.response;
+    } catch (error) {
+        console.error("Chatbot request failed", error)
+        return "Sorry, something went wrong. Try again later."
+    }
+}
+
 export default API
