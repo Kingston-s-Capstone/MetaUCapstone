@@ -58,3 +58,5 @@ const generateChatbotResponse = async (userMessage, profile) => {
     return response.data.repsonse
 
 }
+
+module.exports = { generateChatbotResponse }
