@@ -55,7 +55,7 @@ const Navigation = ({ onToggleChat }) => {
                     <li><Link to='/scholarshippage'>Scholarships</Link></li>
                     <li><Link to="/professional-development">Professional Development</Link></li>
                     <li><Link to="/profilepage">Profile</Link></li>
-                    <button onClick={onToggleChat} className='chat'>Chatbot</button>
+                    <li><p onClick={onToggleChat} className='chat'>Chatbot</p></li>
                     <li><p onClick={handleSignOut} className='signOut'>Sign Out</p></li>
                 </ul>
             </nav>

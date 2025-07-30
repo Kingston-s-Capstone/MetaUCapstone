@@ -23,3 +23,15 @@
     cursor: pointer;
 }
 
+.profileFormButton {
+    background-color: var(--color-accent);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.profileFormButton:hover {
+    background-color: #b8831f;
+}
+

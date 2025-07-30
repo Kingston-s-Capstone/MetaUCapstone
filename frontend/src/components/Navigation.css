@@ -43,3 +43,8 @@
 .signOut:hover {
     text-decoration: underline;
 }
+
+.chat {
+    cursor: pointer;
+    color: navy;
+}

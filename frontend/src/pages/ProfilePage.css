@@ -1,28 +1,21 @@
 .profilePage {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-    gap: 2rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px; /* Space between form and image */
+    padding: 20px;
 }
 
 .profileForm {
-    flex: 1 1 400px;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    max-height: 100%;
+    flex: 1;
 }
 
 .logoSection {
-    flex: 1 1 300px;
+    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 2px solid #ccc;
+    border: none;
     border-radius: 16px;
     height: 100%;
     padding: 2rem;
@@ -30,8 +23,9 @@
 
 .logo {
     max-width: 100%;
-    max-height: 400px;
+    max-height: 100%;
     width: auto;
     height: auto;
     object-fit: contain;
+    border-radius: 16px;
 }
