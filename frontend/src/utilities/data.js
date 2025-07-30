@@ -63,6 +63,7 @@ export const getUserNotifications = () => API.get('/notifications')
 export const sendChatMessage = async (message) => {
     try {
         const res = await API.post("/chatbot", { message });
+        console.log(res)
         return res.data.response;
     } catch (error) {
         console.error("Chatbot request failed", error)

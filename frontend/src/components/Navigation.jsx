@@ -7,7 +7,7 @@ import NotificationBell from './NotificationBell'
 import { getUserNotifications } from '../utilities/data'
 import NotificationModal from './NotificationModal'
 
-const Navigation = () => {
+const Navigation = ({ onToggleChat }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [notifications, setNotifications] = useState([])
     const [unreadCount, setUnreadCount] = useState(0)
@@ -55,6 +55,7 @@ const Navigation = () => {
                     <li><Link to='/scholarshippage'>Scholarships</Link></li>
                     <li><Link to="/professional-development">Professional Development</Link></li>
                     <li><Link to="/profilepage">Profile</Link></li>
+                    <button onClick={onToggleChat} className='chat'>Chatbot</button>
                     <li><p onClick={handleSignOut} className='signOut'>Sign Out</p></li>
                 </ul>
             </nav>

@@ -29,7 +29,7 @@ app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/scholarships', scholarshipRoutes)
 app.use("/api/notifications", notificationRoutes)
 app.use(notificationTriggersRoutes)
-app.use("api/chatbot", chatbotRoute)
+app.use("/api/chatbot", chatbotRoute)
 
 
 app.get('/', (req, res)=> {

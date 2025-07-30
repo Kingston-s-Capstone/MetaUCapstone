@@ -1,4 +1,4 @@
-const supabase = require("../supabaseClient");
+const { supabase } = require("../supabaseClient");
 
 const fetchProfileData = async (userId) => {
     const { data, error } = await supabase
