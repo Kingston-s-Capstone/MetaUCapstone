@@ -9,6 +9,7 @@ const notificationRoutes = require("./routes/notifications")
 const createNotificationTriggerRoutes = require("./routes/notificationTrigger")
 const initializeSocket = require("./socketServer")
 const initializeCronJobs = require("./cronJobs")
+const chatbotRoute = require("./routes/chatbot");
 
 const app = express()
 const server = http.createServer(app);
@@ -28,6 +29,7 @@ app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/scholarships', scholarshipRoutes)
 app.use("/api/notifications", notificationRoutes)
 app.use(notificationTriggersRoutes)
+app.use("/api/chatbot", chatbotRoute)
 
 
 app.get('/', (req, res)=> {
