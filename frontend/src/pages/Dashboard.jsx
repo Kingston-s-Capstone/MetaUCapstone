@@ -25,7 +25,7 @@ const Dashboard = () => {
     return (
         <div className="content">
             <header className="header">
-                <h2>{userName}'s Dashboard' </h2>
+                <h2>{userName}'s Dashboard </h2>
             </header>
             <main className="boards">
                 <PinnedBoard />

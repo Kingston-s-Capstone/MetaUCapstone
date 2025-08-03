@@ -7,7 +7,7 @@ const ProfilePage = () => {
     return (
         <main className="profilePage">
             <div className="profileForm">
-                <h1>Enter User Information</h1>
+                <h1>Enter Your Information</h1>
                 <ProfileForm />
             </div>
             <div className="logoSection">

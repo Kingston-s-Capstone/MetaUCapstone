@@ -53,7 +53,7 @@ const Signin = () => {
                 <p>Don't have an account? <Link to="/signup">Sign up </Link> today!</p>
                 <div className="formInputs">
                     <input onChange={(e) => setEmail(e.target.value)} className="input1" type="email" placeholder="Enter email" />
-                    <input onChange={(e) => setPassword(e.target.value)}className="input2" type="password" placeholder="Create a password" />
+                    <input onChange={(e) => setPassword(e.target.value)}className="input2" type="password" placeholder="Enter password" />
                     <button className="signInButton" type="submit" disabled={loading}>Sign In</button>
                     {error && <p>{error}</p>}
                 </div>
