@@ -1,6 +1,6 @@
 import { createBrowserRouter,  } from 'react-router-dom'
-import Signin from './components/SignIn';
-import Signup from './components/SignUp';
+import Signin from './components/Signin';
+import Signup from './components/Signup';
 import Dashboard from './pages/Dashboard';
 import PrivateRoute from './components/PrivateRoute';
 import ProfilePage from './pages/ProfilePage';
