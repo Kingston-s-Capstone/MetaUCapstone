@@ -6,6 +6,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 from builtins import zip
 from nltk.corpus import wordnet as wn
 import re
+
+import nltk
+nltk.download('stopwords', download_dir='nltk_data')
+
 from nltk.corpus import stopwords
 from datetime import datetime, timedelta, date
 

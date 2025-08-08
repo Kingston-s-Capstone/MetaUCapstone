@@ -67,7 +67,7 @@ function createNotificationTriggerRoutes(emitToUser) {
                 ).data?.email;
 
                 const htmlBody = matchedItems
-                    .map((item) => `<p><a href="${item.link}">${item.title}</a></p>`)
+                    .map((item) => `${item.title} at ${item.link}`)
                     .join("")
 
                 await sendEmail({
@@ -92,7 +92,7 @@ function createNotificationTriggerRoutes(emitToUser) {
                         type:"internship",
                         title: "New internship matches!",
                         message: `
-                                    <p>We've found ${matchedItems.length} new internship(s) that match your profile:</p>
+                                    We've found ${matchedItems.length} new internship(s) that match your profile:
                                     ${htmlBody}
                                 `,
                         url: "http://localhost:5173/internshippage"
