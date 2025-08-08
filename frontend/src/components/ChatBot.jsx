@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { sendChatMessage } from "../utilities/data";
-import "./Chatbot.css"
+import "./ChatBot.css"
 
 const ChatBot = ({ isOpen, onClose }) => {
     const [input, setInput] = useState("");
