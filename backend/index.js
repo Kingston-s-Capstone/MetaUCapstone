@@ -14,11 +14,11 @@ const chatbotRoute = require("./routes/chatbot");
 const app = express()
 const server = http.createServer(app);
 const { io, emitToUser } = initializeSocket(server)
-const PORT = 4000
+const PORT = process.env.PORT || 4000
 app.set("emitToUser", emitToUser)
 app.use(express.json())
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: "https://uplifted-zarr30c1w-kingkd22s-projects.vercel.app",
     credentials: true
 }))
 const notificationTriggersRoutes = createNotificationTriggerRoutes(emitToUser)
@@ -35,8 +35,10 @@ app.use("/api/chatbot", chatbotRoute)
 app.get('/', (req, res)=> {
     res.send('UpliftED API is running')
 })
+app.get('/healthz', (req,res)=>res.send('ok'));
+
 
 initializeCronJobs()
 server.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`)
+    console.log(`Server is running on`, PORT)
 })

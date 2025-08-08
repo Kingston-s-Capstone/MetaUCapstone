@@ -8,7 +8,7 @@ const connectedUsers = new Map();
 function initializeSocket(server) {
     const io = new Server(server, {
         cors: {
-            origin: "http://localhost:5173", 
+            origin: "https://uplifted-zarr30c1w-kingkd22s-projects.vercel.app", 
             methods: ["GET","POST"],
         },
     });
