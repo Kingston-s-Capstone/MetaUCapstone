@@ -7,7 +7,7 @@ function initializeCronJobs() {
         try { 
             console.log("Running daily deadline check");
 
-            const response =  await axios.post("http://localhost:4000/check-deadlines", null, {
+            const response =  await axios.post(`${process.env.BACKEND_URL}/check-deadlines`, null, {
                 headers: {
                     Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
                 }
@@ -24,7 +24,7 @@ function initializeCronJobs() {
         console.log("Running daily inactive user emaill check")
 
         try {
-            const response = await axios.post("http://localhost:4000/check-inactive-users");
+            const response = await axios.post(`${process.env.BACKEND_URL}/check-inactive-users`);
             console.log("Inactive user check response:", response.data)
         } catch (error) {
             console.error("Inactive user check failed", error.response?.data || error.message)
@@ -34,7 +34,7 @@ function initializeCronJobs() {
     cron.schedule("0 11 * * * ", async () => {
         console.log("Running unread notifs check");
         try {
-            const response = axios.post("http://localhost:4000/check-unread")
+            const response = axios.post(`${process.env.BACKEND_URL}/check-unread`)
             console.log("Unread notifs check response:", response.data)
         } catch (error) {
             console.error("Unread notifs check error:", error.message)
@@ -46,7 +46,7 @@ function initializeCronJobs() {
         console.log("Running daily digest cron at 12pm")
 
         try{
-            const response = await axios.post("http://localhost:4000/send-digest")
+            const response = await axios.post(`${process.env.BACKEND_URL}/send-digest`)
             console.log("Digest sent:", response.data);
         } catch (error) {
             console.error("Error sending digest:", error.message)
