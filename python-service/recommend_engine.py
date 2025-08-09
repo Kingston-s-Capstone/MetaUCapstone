@@ -6,13 +6,21 @@ from sklearn.metrics.pairwise import cosine_similarity
 from builtins import zip
 from nltk.corpus import wordnet as wn
 import re
-
 import nltk
-nltk.download('stopwords', download_dir='nltk_data')
+from datetime import datetime, date
+
+# Set a persistent directory for NLTK data
+NLTK_DIR = os.environ.get("NLTK_DATA", os.path.join(os.path.dirname(__file__), "nltk_data"))
+os.makedirs(NLTK_DIR, exist_ok=True)
+
+nltk.data.path = [NLTK_DIR] + nltk.data.path
 
 from nltk.corpus import stopwords
-from datetime import datetime, timedelta, date
-
+try:
+    _ = stopwords.words('english')
+except LookupError:
+    nltk.download('stopwords', download_dir=NLTK_DIR)
+    
 load_dotenv()
 
 #variables
