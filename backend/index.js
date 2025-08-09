@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 4000
 app.set("emitToUser", emitToUser)
 app.use(express.json())
 app.use(cors({
-    origin: "https://uplifted-luh5jxzkd-kingkd22s-projects.vercel.app",
+    origin: "https://uplifted-j4977q20v-kingkd22s-projects.vercel.app",
     credentials: true
 }))
 const notificationTriggersRoutes = createNotificationTriggerRoutes(emitToUser)
