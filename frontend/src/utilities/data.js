@@ -3,7 +3,7 @@ import { supabase } from "../SupaBaseClient";
 
 const backend = import.meta.env.VITE_SERVER_URL
 const API = axios.create({
-    baseURL: backend || 'http://localhost:4000/api'
+    baseURL: `${backend}/api` || 'http://localhost:4000/api'
 });
 
 // Token request for API calls
